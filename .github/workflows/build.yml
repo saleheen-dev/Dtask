@@ -46,14 +46,10 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
 
-      - run: |
-          set -e
-          shopt -s globstar
-          for f in dist-*/**/*.exe dist-*/**/*.dmg dist-*/**/*.AppImage dist-*/**/*.zip dist-*/**/*.yml dist-*/**/*.blockmap; do
-            echo "asset=$f" >> "$GITHUB_ENV"
-          done
-
       - uses: softprops/action-gh-release@v2
         with:
-          files: dist-*/*
+          files: |
+            dist-*/*.exe
+            dist-*/*.dmg
+            dist-*/*.AppImage
           generate_release_notes: true
