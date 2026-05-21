@@ -1,6 +1,7 @@
 {
   "name": "task-killer-electron",
   "version": "0.1.0",
+  "author": "Saleheen",
   "private": true,
   "description": "Dark-mode-first Electron + React + Vite cross-platform task killer app scaffold",
   "type": "module",
@@ -16,7 +17,9 @@
       "out/**/*",
       "resources/**/*"
     ],
-    "asarUnpack": ["resources/**"],
+    "asarUnpack": [
+      "resources/**"
+    ],
     "win": {
       "target": "nsis"
     },
@@ -31,10 +34,10 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "dist": "electron-builder",
-    "dist:win": "electron-builder --win",
-    "dist:mac": "electron-builder --mac",
-    "dist:linux": "electron-builder --linux"
+    "dist": "electron-builder --publish=never",
+    "dist:win": "electron-builder --win --publish=never",
+    "dist:mac": "electron-builder --mac --publish=never",
+    "dist:linux": "electron-builder --linux --publish=never"
   },
   "dependencies": {
     "lucide-react": "^1.11.0",
