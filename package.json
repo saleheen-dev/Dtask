@@ -5,6 +5,28 @@
   "description": "Dark-mode-first Electron + React + Vite cross-platform task killer app scaffold",
   "type": "module",
   "main": "out/main/index.cjs",
+  "build": {
+    "appId": "com.task-killer.app",
+    "productName": "Task Killer",
+    "directories": {
+      "output": "dist",
+      "buildResources": "resources"
+    },
+    "files": [
+      "out/**/*",
+      "resources/**/*"
+    ],
+    "asarUnpack": ["resources/**"],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  },
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",

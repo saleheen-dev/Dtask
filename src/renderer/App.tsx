@@ -1,79 +1,88 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Activity, Search, RotateCw, XCircle } from 'lucide-react'
-import type { ProcessInfo } from '../common/types'
-import { useProcesses } from './hooks/useProcesses'
-import { ProcessTable } from './components/ProcessTable'
-import { ConfirmModal } from './components/ConfirmModal'
-import { LoadingState } from './components/LoadingState'
-import { EmptyState } from './components/EmptyState'
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Search, RotateCw, XCircle } from "lucide-react";
+import appIcon from "../../resources/icon.png";
+import type { ProcessInfo } from "../common/types";
+import { useProcesses } from "./hooks/useProcesses";
+import { ProcessTable } from "./components/ProcessTable";
+import { ConfirmModal } from "./components/ConfirmModal";
+import { LoadingState } from "./components/LoadingState";
+import { EmptyState } from "./components/EmptyState";
 
 function isSystemProcess(proc: ProcessInfo): boolean {
-  if (proc.pid < 1000) return true
-  const lower = proc.name.toLowerCase()
-  return lower.includes('system') || lower.includes('kernel')
+  if (proc.pid < 1000) return true;
+  const lower = proc.name.toLowerCase();
+  return lower.includes("system") || lower.includes("kernel");
 }
 
-function filterProcesses(processes: ProcessInfo[], query: string): ProcessInfo[] {
-  if (!query.trim()) return processes
-  const q = query.trim().toLowerCase()
+function filterProcesses(
+  processes: ProcessInfo[],
+  query: string,
+): ProcessInfo[] {
+  if (!query.trim()) return processes;
+  const q = query.trim().toLowerCase();
   return processes.filter((p) => {
     // PID: exact match or includes
-    if (String(p.pid).includes(q)) return true
+    if (String(p.pid).includes(q)) return true;
     // Name: case-insensitive partial match
-    if (p.name.toLowerCase().includes(q)) return true
+    if (p.name.toLowerCase().includes(q)) return true;
     // Port: exact match on any port
-    if (p.ports.some((port) => String(port) === q)) return true
-    return false
-  })
+    if (p.ports.some((port) => String(port) === q)) return true;
+    return false;
+  });
 }
 
 export default function App() {
-  const [search, setSearch] = useState('')
-  const [autoRefresh, setAutoRefresh] = useState(false)
-  const [pendingKill, setPendingKill] = useState<ProcessInfo | null>(null)
-  const [toast, setToast] = useState<string | null>(null)
+  const [search, setSearch] = useState("");
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [pendingKill, setPendingKill] = useState<ProcessInfo | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
-  const { processes, loading, refresh, killProcess, error } = useProcesses({ autoRefresh })
+  const { processes, loading, refresh, killProcess, error } = useProcesses({
+    autoRefresh,
+  });
 
   // Auto-dismiss error toast after 3 seconds
   useEffect(() => {
-    if (!error) return
-    setToast(error)
-    const timer = setTimeout(() => setToast(null), 3000)
-    return () => clearTimeout(timer)
-  }, [error])
+    if (!error) return;
+    setToast(error);
+    const timer = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(timer);
+  }, [error]);
 
   // Keyboard shortcuts: Ctrl/Cmd+R for refresh, Escape to clear search
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'r') {
-        e.preventDefault()
-        refresh()
+      if ((e.metaKey || e.ctrlKey) && e.key === "r") {
+        e.preventDefault();
+        refresh();
       }
-      if (e.key === 'Escape') {
-        setSearch('')
-        setPendingKill(null)
+      if (e.key === "Escape") {
+        setSearch("");
+        setPendingKill(null);
       }
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [refresh])
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [refresh]);
 
-  const filtered = useMemo(() => filterProcesses(processes, search), [processes, search])
+  const filtered = useMemo(
+    () => filterProcesses(processes, search),
+    [processes, search],
+  );
 
   const handleKillClick = useCallback((proc: ProcessInfo) => {
-    setPendingKill(proc)
-  }, [])
+    setPendingKill(proc);
+  }, []);
 
   const handleKillConfirm = useCallback(async () => {
-    if (!pendingKill) return
-    await killProcess(pendingKill.pid)
-    setPendingKill(null)
-  }, [pendingKill, killProcess])
+    if (!pendingKill) return;
+    await killProcess(pendingKill.pid);
+    setPendingKill(null);
+  }, [pendingKill, killProcess]);
 
   const handleKillCancel = useCallback(() => {
-    setPendingKill(null)
-  }, [])
+    setPendingKill(null);
+  }, []);
 
   return (
     <div className="flex h-screen flex-col bg-gray-900 text-white">
@@ -92,10 +101,12 @@ export default function App() {
         <div className="flex items-center justify-between gap-4">
           {/* Title */}
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/15">
-              <Activity className="h-5 w-5 text-emerald-400" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg">
+              <img src={appIcon} className="h-full w-full" alt="Task Killer" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-white">Task Killer</h1>
+            <h1 className="text-xl font-bold tracking-tight text-white">
+              Task Killer
+            </h1>
           </div>
 
           {/* Search + Controls */}
@@ -119,7 +130,9 @@ export default function App() {
               aria-label="Refresh process list"
               title="Refresh (Ctrl+R)"
             >
-              <RotateCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <RotateCw
+                className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+              />
             </button>
 
             {/* Auto-refresh toggle */}
@@ -149,7 +162,7 @@ export default function App() {
             message={
               search.trim()
                 ? `No processes matching "${search.trim()}"`
-                : 'No processes found'
+                : "No processes found"
             }
           />
         ) : (
@@ -160,9 +173,9 @@ export default function App() {
       {/* Footer status */}
       <footer className="shrink-0 border-t border-gray-700/60 bg-gray-800/50 px-6 py-2">
         <p className="text-xs text-gray-500">
-          {filtered.length} process{filtered.length !== 1 ? 'es' : ''}
+          {filtered.length} process{filtered.length !== 1 ? "es" : ""}
           {search.trim() && ` of ${processes.length} total`}
-          {autoRefresh && ' · Auto-refreshing every 3s'}
+          {autoRefresh && " · Auto-refreshing every 3s"}
         </p>
       </footer>
 
@@ -177,5 +190,5 @@ export default function App() {
         />
       )}
     </div>
-  )
+  );
 }
