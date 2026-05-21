@@ -102,10 +102,10 @@ export default function App() {
           {/* Title */}
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg">
-              <img src={appIcon} className="h-full w-full" alt="Task Killer" />
+              <img src={appIcon} className="h-full w-full" alt="Dtask" />
             </div>
             <h1 className="text-xl font-bold tracking-tight text-white">
-              Task Killer
+              Dtask
             </h1>
           </div>
 

@@ -1,4 +1,4 @@
-# Task Killer
+# Dtask
 
 A modern, open-source cross-platform desktop app built with **Electron v41.3.0** + **React v19.2** + **Vite** that lists all network processes with their ports and lets you kill them with one click.
 

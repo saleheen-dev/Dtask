@@ -42,7 +42,8 @@ async function createWindow() {
     },
   });
 
-  const devServerUrl = process.env.ELECTRON_RENDERER_URL || process.env.VITE_DEV_SERVER_URL;
+  const devServerUrl =
+    process.env.ELECTRON_RENDERER_URL || process.env.VITE_DEV_SERVER_URL;
   if (devServerUrl) {
     mainWindow.loadURL(devServerUrl);
   } else {
@@ -72,13 +73,15 @@ async function createWindow() {
 }
 
 function createTray() {
-  const trayIcon = nativeImage.createFromPath(iconPath()).resize({ width: 16, height: 16 });
+  const trayIcon = nativeImage
+    .createFromPath(iconPath())
+    .resize({ width: 16, height: 16 });
   tray = new Tray(trayIcon);
-  tray.setToolTip("Task Killer");
+  tray.setToolTip("Dtask - Task Killer");
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: "Show Task Killer",
+      label: "Show Dtask",
       click: () => {
         if (mainWindow) {
           mainWindow.show();
