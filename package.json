@@ -21,8 +21,7 @@
       "resources/**"
     ],
     "win": {
-      "target": "nsis",
-      "artifactName": "dtask-windows-setup"
+      "target": "nsis"
     },
     "mac": {
       "target": "dmg"
