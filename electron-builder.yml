@@ -1,0 +1,22 @@
+appId: com.opensource.task-killer
+productName: Task Killer
+directories:
+  output: dist
+files:
+  - out/**/*
+  - package.json
+mac:
+  target:
+    - dmg
+  category: public.app-category.utilities
+win:
+  target:
+    - nsis
+  artifactName: ${productName}-${version}-setup.${ext}
+linux:
+  target:
+    - AppImage
+  category: Utility
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
