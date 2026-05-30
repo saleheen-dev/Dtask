@@ -5,6 +5,7 @@ interface ConfirmModalProps {
   pid: number;
   name: string;
   isSystemProcess: boolean;
+  count?: number;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -13,6 +14,7 @@ export function ConfirmModal({
   pid,
   name,
   isSystemProcess,
+  count,
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
@@ -50,20 +52,26 @@ export function ConfirmModal({
           </div>
           <div className="flex-1">
             <h3 id="confirm-title" className="text-lg font-semibold text-white">
-              {isSystemProcess ? "System Process Warning" : "Kill Process"}
+              {count && count > 1 ? `Kill ${count} Processes` : isSystemProcess ? "System Process Warning" : "Kill Process"}
             </h3>
-            {isSystemProcess ? (
+            {count && count > 1 ? (
+              <p className="mt-2 text-sm text-gray-300">
+                Are you sure you want to kill{" "}
+                <span className="font-semibold text-white">{count} processes</span>?
+              </p>
+            ) : isSystemProcess ? (
               <p className="mt-2 text-sm leading-relaxed text-amber-300/90">
                 <span className="font-semibold text-amber-400">Warning:</span>{" "}
                 This appears to be a system process. Killing it may cause
                 instability.
               </p>
-            ) : null}
-            <p className="mt-2 text-sm text-gray-300">
-              Are you sure you want to kill{" "}
-              <span className="font-semibold text-white">{name}</span>{" "}
-              <span className="text-gray-400">(PID {pid})</span>?
-            </p>
+            ) : (
+              <p className="mt-2 text-sm text-gray-300">
+                Are you sure you want to kill{" "}
+                <span className="font-semibold text-white">{name}</span>{" "}
+                <span className="text-gray-400">(PID {pid})</span>?
+              </p>
+            )}
           </div>
         </div>
 
@@ -79,7 +87,7 @@ export function ConfirmModal({
             onClick={onConfirm}
             className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
-            Kill Process
+            {count && count > 1 ? "Yes, Kill All" : "Kill Process"}
           </button>
         </div>
       </div>

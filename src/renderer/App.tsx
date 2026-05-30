@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Search, RotateCw, XCircle } from "lucide-react";
+import { Search, RotateCw, Trash2, XCircle } from "lucide-react";
 import appIcon from "../../resources/icon.png";
 import type { ProcessInfo } from "../common/types";
 import { useProcesses } from "./hooks/useProcesses";
 import { ProcessTable } from "./components/ProcessTable";
 import { ConfirmModal } from "./components/ConfirmModal";
+import { KillByPort } from "./components/KillByPort";
 import { LoadingState } from "./components/LoadingState";
 import { EmptyState } from "./components/EmptyState";
 
@@ -35,9 +36,12 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [pendingKill, setPendingKill] = useState<ProcessInfo | null>(null);
+  const [pendingBatchKill, setPendingBatchKill] = useState<ProcessInfo[] | null>(null);
+  const [showKillByPort, setShowKillByPort] = useState(false);
+  const [selectedPids, setSelectedPids] = useState<Set<number>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
 
-  const { processes, loading, refresh, killProcess, error } = useProcesses({
+  const { processes, loading, refresh, killProcess, killMultiple, error } = useProcesses({
     autoRefresh,
   });
 
@@ -49,16 +53,22 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [error]);
 
-  // Keyboard shortcuts: Ctrl/Cmd+R for refresh, Escape to clear search
+  // Keyboard shortcuts: Cmd/Ctrl+R for refresh, Cmd/Ctrl+K for kill-by-port, Escape to dismiss
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "r") {
         e.preventDefault();
         refresh();
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setShowKillByPort(true);
+      }
       if (e.key === "Escape") {
         setSearch("");
         setPendingKill(null);
+        setPendingBatchKill(null);
+        setShowKillByPort(false);
       }
     }
     window.addEventListener("keydown", handleKeyDown);
@@ -70,9 +80,77 @@ export default function App() {
     [processes, search],
   );
 
+  const conflictingPorts = useMemo(() => {
+    const counts = new Map<number, number>();
+    for (const p of processes) {
+      for (const port of p.ports) {
+        counts.set(port, (counts.get(port) ?? 0) + 1);
+      }
+    }
+    const result = new Set<number>();
+    for (const [port, count] of counts) {
+      if (count > 1) result.add(port);
+    }
+    return result;
+  }, [processes]);
+
   const handleKillClick = useCallback((proc: ProcessInfo) => {
     setPendingKill(proc);
   }, []);
+
+  const handleToggleSelect = useCallback((pid: number) => {
+    setSelectedPids((prev) => {
+      const next = new Set(prev);
+      if (next.has(pid)) next.delete(pid);
+      else next.add(pid);
+      return next;
+    });
+  }, []);
+
+  const handleToggleSelectAll = useCallback(() => {
+    const visiblePids = filtered.map((p) => p.pid);
+    setSelectedPids((prev) => {
+      const allSelected = visiblePids.every((pid) => prev.has(pid));
+      const next = new Set(prev);
+      for (const pid of visiblePids) {
+        if (allSelected) next.delete(pid);
+        else next.add(pid);
+      }
+      return next;
+    });
+  }, [filtered]);
+
+  const handleBatchKill = useCallback(() => {
+    const selected = processes.filter((p) => selectedPids.has(p.pid));
+    if (selected.length === 0) return;
+    setPendingBatchKill(selected);
+  }, [processes, selectedPids]);
+
+  const handleBatchKillConfirm = useCallback(async () => {
+    if (!pendingBatchKill) return;
+    const pids = pendingBatchKill.map((p) => p.pid);
+    setPendingBatchKill(null);
+    setSelectedPids(new Set());
+    await killMultiple(pids);
+  }, [pendingBatchKill, killMultiple]);
+
+  const handleKillByPortSubmit = useCallback(
+    (portStr: string) => {
+      const port = parseInt(portStr, 10);
+      if (!Number.isFinite(port)) {
+        setToast("Invalid port number");
+        return;
+      }
+      const found = processes.find((p) => p.ports.includes(port));
+      if (!found) {
+        setToast(`No process found on port ${port}`);
+        return;
+      }
+      setShowKillByPort(false);
+      setPendingKill(found);
+    },
+    [processes],
+  );
 
   const handleKillConfirm = useCallback(async () => {
     if (!pendingKill) return;
@@ -136,6 +214,17 @@ export default function App() {
               />
             </button>
 
+            {/* Batch kill */}
+            {selectedPids.size > 0 && (
+              <button
+                onClick={handleBatchKill}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm font-semibold text-red-400 transition-colors hover:border-red-500/60 hover:bg-red-500/20 hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+              >
+                <Trash2 className="h-4 w-4" />
+                Kill Selected ({selectedPids.size})
+              </button>
+            )}
+
             {/* Auto-refresh toggle */}
             <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-700 bg-gray-900 px-3 py-1.5 text-sm text-gray-400 transition-colors hover:border-gray-600 hover:text-white">
               <span className="text-xs font-medium">Auto</span>
@@ -167,7 +256,14 @@ export default function App() {
             }
           />
         ) : (
-          <ProcessTable processes={filtered} onKill={handleKillClick} />
+          <ProcessTable
+              processes={filtered}
+              onKill={handleKillClick}
+              selectedPids={selectedPids}
+              onToggleSelect={handleToggleSelect}
+              onToggleSelectAll={handleToggleSelectAll}
+              conflictingPorts={conflictingPorts}
+            />
         )}
       </main>
 
@@ -188,6 +284,26 @@ export default function App() {
           isSystemProcess={isSystemProcess(pendingKill)}
           onConfirm={handleKillConfirm}
           onCancel={handleKillCancel}
+        />
+      )}
+
+      {/* Batch kill confirmation modal */}
+      {pendingBatchKill && (
+        <ConfirmModal
+          pid={0}
+          name=""
+          isSystemProcess={false}
+          count={pendingBatchKill.length}
+          onConfirm={handleBatchKillConfirm}
+          onCancel={() => setPendingBatchKill(null)}
+        />
+      )}
+
+      {/* Kill-by-port dialog */}
+      {showKillByPort && (
+        <KillByPort
+          onSubmit={handleKillByPortSubmit}
+          onCancel={() => setShowKillByPort(false)}
         />
       )}
     </div>

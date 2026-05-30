@@ -8,6 +8,10 @@ type SortDir = 'asc' | 'desc'
 interface ProcessTableProps {
   processes: ProcessInfo[]
   onKill: (process: ProcessInfo) => void
+  selectedPids: Set<number>
+  onToggleSelect: (pid: number) => void
+  onToggleSelectAll: () => void
+  conflictingPorts: Set<number>
 }
 
 function isSystemProcess(process: ProcessInfo): boolean {
@@ -32,7 +36,7 @@ function compareValues(a: ProcessInfo, b: ProcessInfo, key: SortKey): number {
   }
 }
 
-export function ProcessTable({ processes, onKill }: ProcessTableProps) {
+export function ProcessTable({ processes, onKill, selectedPids, onToggleSelect, onToggleSelectAll, conflictingPorts }: ProcessTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>('pid')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
 
@@ -56,6 +60,8 @@ export function ProcessTable({ processes, onKill }: ProcessTableProps) {
     return copy
   }, [processes, sortKey, sortDir])
 
+  const allSelected = processes.length > 0 && processes.every(p => selectedPids.has(p.pid))
+
   const SortIcon = ({ column }: { column: SortKey }) => {
     if (column !== sortKey) {
       return <span className="ml-1 inline-block h-4 w-4 opacity-0 group-hover:opacity-30" />
@@ -75,6 +81,14 @@ export function ProcessTable({ processes, onKill }: ProcessTableProps) {
       <table className="w-full">
         <thead>
           <tr className="border-b border-gray-700 bg-gray-800">
+            <th className="w-10 px-4 py-3">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={onToggleSelectAll}
+                className="h-4 w-4 rounded border-gray-600 bg-gray-800 text-emerald-500 focus:ring-emerald-500/30"
+              />
+            </th>
             <th className={headerClass} onClick={() => handleSort('pid')}>
               PID <SortIcon column="pid" />
             </th>
@@ -95,14 +109,24 @@ export function ProcessTable({ processes, onKill }: ProcessTableProps) {
         <tbody>
           {sorted.map((proc) => {
             const sys = isSystemProcess(proc)
+            const conflict = proc.ports.some(p => conflictingPorts.has(p))
             return (
               <tr
                 key={proc.pid}
-                className="border-b border-gray-700/50 transition-colors last:border-b-0 hover:bg-gray-700/50"
+                className={`border-b border-gray-700/50 transition-colors last:border-b-0 hover:bg-gray-700/50 ${conflict ? 'bg-amber-500/5' : ''}`}
               >
+                <td className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedPids.has(proc.pid)}
+                    onChange={() => onToggleSelect(proc.pid)}
+                    className="h-4 w-4 rounded border-gray-600 bg-gray-800 text-emerald-500 focus:ring-emerald-500/30"
+                  />
+                </td>
                 <td className="px-4 py-3 font-mono text-sm text-gray-300">{proc.pid}</td>
                 <td className="px-4 py-3 text-sm text-white">
                   <span className="flex items-center gap-2">
+                    {conflict && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
                     {proc.name}
                     {sys && (
                       <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-400">
