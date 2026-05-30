@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Search, RotateCw, Trash2, XCircle } from "lucide-react";
+import { Search, RotateCw, Trash2, XCircle, Download } from "lucide-react";
 import appIcon from "../../resources/icon.png";
 import type { ProcessInfo } from "../common/types";
 import { useProcesses } from "./hooks/useProcesses";
@@ -39,9 +39,12 @@ export default function App() {
   const [pendingBatchKill, setPendingBatchKill] = useState<ProcessInfo[] | null>(null);
   const [showKillByPort, setShowKillByPort] = useState(false);
   const [selectedPids, setSelectedPids] = useState<Set<number>>(new Set());
+  const [showCmdline, setShowCmdline] = useState(false);
+  const [groupByName, setGroupByName] = useState(false);
+  const [suspendedPids, setSuspendedPids] = useState<Set<number>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
 
-  const { processes, loading, refresh, killProcess, killMultiple, error } = useProcesses({
+  const { processes, loading, refresh, killProcess, killMultiple, suspendProcess, resumeProcess, error, highlights } = useProcesses({
     autoRefresh,
   });
 
@@ -97,6 +100,28 @@ export default function App() {
   const handleKillClick = useCallback((proc: ProcessInfo) => {
     setPendingKill(proc);
   }, []);
+
+  const handleSuspend = useCallback(async (proc: ProcessInfo) => {
+    const ok = await suspendProcess(proc.pid);
+    if (ok) {
+      setSuspendedPids(prev => new Set(prev).add(proc.pid));
+    } else {
+      setToast(`Failed to suspend ${proc.name} (PID ${proc.pid}). Try running as administrator.`);
+    }
+  }, [suspendProcess]);
+
+  const handleResume = useCallback(async (proc: ProcessInfo) => {
+    const ok = await resumeProcess(proc.pid);
+    if (ok) {
+      setSuspendedPids(prev => {
+        const next = new Set(prev);
+        next.delete(proc.pid);
+        return next;
+      });
+    } else {
+      setToast(`Failed to resume ${proc.name} (PID ${proc.pid}).`);
+    }
+  }, [resumeProcess]);
 
   const handleToggleSelect = useCallback((pid: number) => {
     setSelectedPids((prev) => {
@@ -163,6 +188,36 @@ export default function App() {
     setPendingKill(null);
   }, []);
 
+  const handleExportCsv = useCallback(() => {
+    const headers = "PID,Name,Ports,Protocol,Address,Command Line";
+    const rows = filtered.map(p => {
+      const cmd = p.cmdline ? `"${p.cmdline.replace(/"/g, '""')}"` : "";
+      return `${p.pid},"${p.name}","${p.ports.join('; ')}",${p.protocol},${p.address ?? ""},${cmd}`;
+    });
+    const csv = [headers, ...rows].join("\n");
+    try {
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dtask-processes-${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setToast("CSV exported");
+    } catch {
+      setToast("Failed to export CSV");
+    }
+  }, [filtered]);
+
+  useEffect(() => {
+    const unsub = window.electronAPI.onShowKillByPort(() => setShowKillByPort(true));
+    return unsub;
+  }, []);
+
+  const btnBase = "flex h-9 items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-900 px-3 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/40";
+  const btnActive = `${btnBase} border-emerald-500/40 text-emerald-400 hover:border-emerald-500/60 hover:text-emerald-300`;
+  const btnInactive = `${btnBase} text-gray-400 hover:border-gray-600 hover:text-white`;
+
   return (
     <div className="flex h-screen flex-col bg-gray-900 text-white">
       {/* Error toast */}
@@ -225,6 +280,38 @@ export default function App() {
               </button>
             )}
 
+            {/* Group toggle */}
+            <button
+              onClick={() => setGroupByName(!groupByName)}
+              className={groupByName ? btnActive : btnInactive}
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M21 8V5a2 2 0 0 0-2-2h-3" /><path d="M16 21h3a2 2 0 0 0 2-2v-3" /><path d="M3 16v3a2 2 0 0 0 2 2h3" />
+              </svg>
+              Group
+            </button>
+
+            {/* Cmdline toggle */}
+            <button
+              onClick={() => setShowCmdline(!showCmdline)}
+              className={showCmdline ? btnActive : btnInactive}
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" />
+              </svg>
+              Cmdline
+            </button>
+
+            {/* Export CSV */}
+            <button
+              onClick={handleExportCsv}
+              className={btnInactive}
+              title="Export CSV"
+            >
+              <Download className="h-3.5 w-3.5" />
+              CSV
+            </button>
+
             {/* Auto-refresh toggle */}
             <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-700 bg-gray-900 px-3 py-1.5 text-sm text-gray-400 transition-colors hover:border-gray-600 hover:text-white">
               <span className="text-xs font-medium">Auto</span>
@@ -259,10 +346,16 @@ export default function App() {
           <ProcessTable
               processes={filtered}
               onKill={handleKillClick}
+              onSuspend={handleSuspend}
+              onResume={handleResume}
               selectedPids={selectedPids}
               onToggleSelect={handleToggleSelect}
               onToggleSelectAll={handleToggleSelectAll}
               conflictingPorts={conflictingPorts}
+              showCmdline={showCmdline}
+              groupByName={groupByName}
+              suspendedPids={suspendedPids}
+              highlights={highlights}
             />
         )}
       </main>
@@ -272,6 +365,7 @@ export default function App() {
         <p className="text-xs text-gray-500">
           {filtered.length} process{filtered.length !== 1 ? "es" : ""}
           {search.trim() && ` of ${processes.length} total`}
+          {suspendedPids.size > 0 && ` · ${suspendedPids.size} suspended`}
           {autoRefresh && " · Auto-refreshing every 3s"}
         </p>
       </footer>

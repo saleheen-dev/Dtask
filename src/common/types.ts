@@ -4,6 +4,7 @@ export interface ProcessInfo {
   ports: number[];
   protocol: string;
   address?: string;
+  cmdline?: string;
 }
 
 export interface KillResult {

@@ -211,15 +211,52 @@ export async function listProcesses(): Promise<ProcessInfo[]> {
     console.error('Error listing processes:', err)
   }
 
-  // Transform results into ProcessInfo[]
+  const cmdlines = await fetchCmdlines(platform, results.keys())
+
   const list: ProcessInfo[] = []
   for (const [pid, v] of results.entries()) {
     if (!v.ports || v.ports.length === 0) continue
-    list.push({ pid, name: (v.name ?? ''), ports: v.ports, protocol: v.protocol ?? 'TCP', address: v.address })
+    list.push({ pid, name: (v.name ?? ''), ports: v.ports, protocol: v.protocol ?? 'TCP', address: v.address, cmdline: cmdlines.get(pid) })
   }
   // Ensure determinism for tests
   list.sort((a, b) => a.pid - b.pid)
   return list
+}
+
+async function fetchCmdlines(platform: string, pids: Iterable<number>): Promise<Map<number, string>> {
+  const result = new Map<number, string>()
+  const pidSet = new Set(pids)
+  if (pidSet.size === 0) return result
+  try {
+    if (platform === 'win32') {
+      const { stdout } = await execAsync(
+        'powershell -NoProfile -Command "Get-CimInstance Win32_Process | Select-Object ProcessId, CommandLine | ConvertTo-Csv -NoTypeInformation"'
+      )
+      for (const line of stdout.split(/\r?\n/)) {
+        if (!line.trim() || line.startsWith('"ProcessId"')) continue
+        const parts = line.split('","')
+        if (parts.length < 2) continue
+        const pid = parseInt(parts[0]?.replace(/"/g, ''), 10)
+        if (!Number.isFinite(pid) || !pidSet.has(pid)) continue
+        const cmd = parts.slice(1).join('","').replace(/""/g, '"').replace(/"$/, '').trim()
+        if (cmd) result.set(pid, cmd)
+      }
+    } else {
+      const { stdout } = await execAsync('ps -eo pid=,args=')
+      for (const line of stdout.split('\n')) {
+        const trimmed = line.trim()
+        if (!trimmed) continue
+        const spaceIdx = trimmed.indexOf(' ')
+        if (spaceIdx === -1) continue
+        const pid = parseInt(trimmed.substring(0, spaceIdx), 10)
+        if (!Number.isFinite(pid) || !pidSet.has(pid)) continue
+        const cmd = trimmed.substring(spaceIdx + 1).trim()
+        if (cmd) result.set(pid, cmd)
+      }
+    }
+  } catch {
+  }
+  return result
 }
 
 /** lightweight export for tests and future extension */

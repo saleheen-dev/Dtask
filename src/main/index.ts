@@ -11,6 +11,7 @@ import path from "path";
 import { ProcessInfo } from "../common/types";
 import { listProcesses } from "./services/processDetector";
 import { killProcess } from "./services/processKiller";
+import { suspendProcess, resumeProcess } from "./services/processSuspend";
 import { readWindowState, saveWindowState } from "./services/windowState";
 
 let mainWindow: BrowserWindow | null = null;
@@ -88,6 +89,20 @@ function createTray() {
           mainWindow.focus();
         } else {
           createWindow();
+        }
+      },
+    },
+    {
+      label: "Kill by port…",
+      click: () => {
+        if (mainWindow) {
+          mainWindow.show();
+          mainWindow.focus();
+          mainWindow.webContents.send("tray:show-kill-by-port");
+        } else {
+          createWindow().then(() => {
+            mainWindow?.webContents.send("tray:show-kill-by-port");
+          });
         }
       },
     },
@@ -176,4 +191,12 @@ ipcMain.handle("process:list", async (): Promise<ProcessInfo[]> => {
 ipcMain.handle("process:kill", async (_event, pid: number) => {
   const res = await killProcess(pid);
   return res;
+});
+
+ipcMain.handle("process:suspend", async (_event, pid: number) => {
+  return await suspendProcess(pid);
+});
+
+ipcMain.handle("process:resume", async (_event, pid: number) => {
+  return await resumeProcess(pid);
 });

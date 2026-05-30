@@ -22,7 +22,10 @@ declare global {
     electronAPI: {
       listProcesses: () => Promise<ProcessInfo[]>;
       killProcess: (pid: number) => Promise<KillResult>;
+      suspendProcess: (pid: number) => Promise<KillResult>;
+      resumeProcess: (pid: number) => Promise<KillResult>;
       onRefreshProcessList: (callback: () => void) => () => void;
+      onShowKillByPort: (callback: () => void) => () => void;
     }
   }
 }
