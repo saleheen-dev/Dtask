@@ -123,16 +123,20 @@ export async function listProcesses(): Promise<ProcessInfo[]> {
       // Windows: netstat -ano and/or filter LISTENING lines
       const { stdout } = await execAsync('netstat -ano')
       const map = parseWindowsNetstatOutput(stdout)
-      // For each PID, fetch process name via tasklist
+
+      // Single tasklist call to build PID → name lookup
+      const { stdout: taskOut } = await execAsync('tasklist /FO CSV /NH')
+      const pidToName = new Map<number, string>()
+      for (const line of taskOut.split(/\r?\n/)) {
+        if (!line.trim()) continue
+        const parts = line.split(',')
+        const name = parts[0]?.replace(/['"]/g, '').trim()
+        const pid = parseInt(parts[1]?.replace(/['"]/g, ''), 10)
+        if (name && Number.isFinite(pid)) pidToName.set(pid, name)
+      }
+
       for (const [pid, v] of map.entries()) {
-        try {
-          const { stdout: taskOut } = await execAsync(`tasklist /FI "PID eq ${pid}" /FO CSV /NH`)
-          // First column is image name in CSV
-          const name = (taskOut.split(',')[0] || '').replace(/['"]/g, '').trim()
-          v.name = name || v.name
-        } catch {
-          // Ignore failures to fetch name; keep existing values
-        }
+        v.name = pidToName.get(pid) || v.name
         results.set(pid, v)
       }
     } else if (platform === 'darwin') {

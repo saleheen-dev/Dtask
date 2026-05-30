@@ -123,6 +123,7 @@ function createTray() {
 }
 
 app.whenReady().then(async () => {
+  Menu.setApplicationMenu(null);
   await createWindow();
   createTray();
 

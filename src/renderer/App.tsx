@@ -76,8 +76,9 @@ export default function App() {
 
   const handleKillConfirm = useCallback(async () => {
     if (!pendingKill) return;
-    await killProcess(pendingKill.pid);
+    const pid = pendingKill.pid;
     setPendingKill(null);
+    await killProcess(pid);
   }, [pendingKill, killProcess]);
 
   const handleKillCancel = useCallback(() => {
