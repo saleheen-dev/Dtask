@@ -1,13 +1,13 @@
 {
   "name": "dtask",
-  "version": "0.1.0",
+  "version": "0.7.0",
   "author": "Saleheen",
   "private": true,
   "description": "Dark-mode-first Electron + React + Vite cross-platform task killer app scaffold",
   "type": "module",
   "main": "out/main/index.cjs",
   "build": {
-    "appId": "com.task-killer.app",
+    "appId": "com.dtask.app",
     "productName": "Dtask",
     "directories": {
       "output": "dist",

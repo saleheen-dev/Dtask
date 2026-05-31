@@ -1,4 +1,4 @@
-appId: com.opensource.task-killer
+appId: com.opensource.dtask
 productName: Dtask
 directories:
   output: dist
