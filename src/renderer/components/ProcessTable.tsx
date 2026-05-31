@@ -227,13 +227,13 @@ export function ProcessTable({
                   <ProcessPortsCell ports={allPorts} />
                 </TableCell>
                 <TableCell className={processTableColumnClassNames.protocol}>
-                  <ProcessProtocolCell
-                    protocol={procs[0]?.protocol || "TCP"}
-                  />
+                  <ProcessProtocolCell protocol={procs[0]?.protocol || "TCP"} />
                 </TableCell>
                 {showCmdline && (
                   <TableCell>
-                    <span className="text-muted-foreground italic">Multiple</span>
+                    <span className="text-muted-foreground italic">
+                      Multiple
+                    </span>
                   </TableCell>
                 )}
                 <TableCell className="text-right">
@@ -253,7 +253,9 @@ export function ProcessTable({
               </TableRow>
               {expanded &&
                 procs.map((proc, idx) => {
-                  const conflict = proc.ports.some((p) => conflictingPorts.has(p));
+                  const conflict = proc.ports.some((p) =>
+                    conflictingPorts.has(p),
+                  );
                   const added = highlights.get(proc.pid);
                   const hlClass =
                     added === "added"
@@ -261,48 +263,52 @@ export function ProcessTable({
                       : "";
                   const conflictClass = conflict ? "bg-amber-500/5" : "";
                   return (
-                  <TableRow
-                    key={proc.pid}
-                    className={`bg-muted/10 hover:bg-muted/20 ${idx % 2 === 0 ? "bg-muted/5" : ""} ${conflictClass} ${hlClass}`}
-                  >
-                    <TableCell className={`${processTableColumnClassNames.select} pl-6`}>
-                      <Checkbox
-                        checked={selectedPids.has(proc.pid)}
-                        onCheckedChange={() => onToggleSelect(proc.pid)}
-                      />
-                    </TableCell>
-                    <TableCell className={processTableColumnClassNames.pid}>
-                      <ProcessPidCell pid={proc.pid} />
-                    </TableCell>
-                    <TableCell>
-                      <ProcessNameCell
-                        proc={proc}
-                        conflictingPorts={conflictingPorts}
-                        suspendedPids={suspendedPids}
-                        indent
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <ProcessPortsCell ports={proc.ports} />
-                    </TableCell>
-                    <TableCell className={processTableColumnClassNames.protocol}>
-                      <ProcessProtocolCell protocol={proc.protocol} />
-                    </TableCell>
-                    {showCmdline && (
-                      <TableCell>
-                        <ProcessCmdlineCell cmdline={proc.cmdline} />
+                    <TableRow
+                      key={proc.pid}
+                      className={`bg-accent/40 hover:bg-accent/10 ${idx % 2 === 1 ? "bg-accent/80" : ""} ${conflictClass} ${hlClass}`}
+                    >
+                      <TableCell
+                        className={`${processTableColumnClassNames.select} pl-6`}
+                      >
+                        <Checkbox
+                          checked={selectedPids.has(proc.pid)}
+                          onCheckedChange={() => onToggleSelect(proc.pid)}
+                        />
                       </TableCell>
-                    )}
-                    <TableCell className="text-right">
-                      <ProcessActionsCell
-                        proc={proc}
-                        suspendedPids={suspendedPids}
-                        onKill={onKill}
-                        onSuspend={onSuspend}
-                        onResume={onResume}
-                      />
-                    </TableCell>
-                  </TableRow>
+                      <TableCell className={processTableColumnClassNames.pid}>
+                        <ProcessPidCell pid={proc.pid} />
+                      </TableCell>
+                      <TableCell>
+                        <ProcessNameCell
+                          proc={proc}
+                          conflictingPorts={conflictingPorts}
+                          suspendedPids={suspendedPids}
+                          indent
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <ProcessPortsCell ports={proc.ports} />
+                      </TableCell>
+                      <TableCell
+                        className={processTableColumnClassNames.protocol}
+                      >
+                        <ProcessProtocolCell protocol={proc.protocol} />
+                      </TableCell>
+                      {showCmdline && (
+                        <TableCell>
+                          <ProcessCmdlineCell cmdline={proc.cmdline} />
+                        </TableCell>
+                      )}
+                      <TableCell className="text-right">
+                        <ProcessActionsCell
+                          proc={proc}
+                          suspendedPids={suspendedPids}
+                          onKill={onKill}
+                          onSuspend={onSuspend}
+                          onResume={onResume}
+                        />
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
             </Fragment>
