@@ -8,16 +8,23 @@ A modern, open-source cross-platform desktop app built with **Electron v41.3.0**
 
 ## Features
 
-- **List processes** with their PID, name, listening port(s), and protocol
-- **Search** by PID, process name, or port number
-- **Kill processes** directly from the UI with a confirmation modal
-- **System process protection** — warns before killing system processes (PID < 1000)
-- **Auto-refresh** toggle to keep the list updated every 3 seconds
-- **Sortable columns** — click any column header to sort
-- **System tray** support — minimize to tray on Windows/Linux
-- **Global shortcut** — `Ctrl/Cmd+Shift+T` to show/hide the app
-- **Window state persistence** — remembers window size and position
-- **Dark-mode-first** modern UI built with Tailwind CSS v4
+- **Process table** — lists all network processes with PID, name, listening port(s), protocol, and optional command-line path
+- **Search** — filter by PID, process name, or port number
+- **Sortable columns** — click any column header (PID, Name, Ports, Protocol) to sort ascending/descending
+- **Kill processes** — single-click kill with confirmation modal; system process protection (PID < 1000)
+- **Batch kill** — checkbox-select multiple processes and kill them all at once
+- **Kill by port** — `Ctrl+K` opens a dialog; enter a port to find and kill the owning process
+- **Port conflict detector** — ports shared by multiple processes are highlighted with an amber indicator
+- **Group by executable** — collapse same-name processes (e.g. `chrome.exe × 12`) into one expandable row
+- **Command-line column** — toggle to show full executable paths and arguments, with hover tooltip
+- **Export CSV** — download `dtask-processes-*.csv` with all filtered rows
+- **Suspend / Resume** — pause a process (yellow indicator) and resume it later
+- **Change highlighting** — new processes since the last refresh pulse green for 2.5 seconds
+- **Auto-refresh** — toggle to refresh every 3 seconds
+- **System tray** — minimize to tray on Windows/Linux; right-click → Kill by port
+- **Window state persistence** — remembers size and position across restarts
+- **Dark-mode-first** — modern UI with shadcn/ui components and Tailwind CSS v4
+- **Responsive header** — full toolbar on wide windows, hamburger command menu on narrow
 
 ## Install
 
@@ -51,13 +58,31 @@ npm run dist:mac    # macOS DMG
 npm run dist:linux  # Linux AppImage
 ```
 
+### GitHub Release
+
+Tag and push to trigger CI:
+
+```bash
+npm version patch   # or minor / major
+git push origin v0.1.1
+```
+
+## Keyboard Shortcuts
+
+| Shortcut       | Action                           |
+|----------------|----------------------------------|
+| `Ctrl+S`       | Focus search input               |
+| `Ctrl+K`       | Open Kill by Port dialog         |
+| `Ctrl+R`       | Refresh process list             |
+| `Escape`       | Clear search / close dialogs     |
+
 ## Platform Support
 
-| Platform | Process Detection                | Process Killing    |
-| -------- | -------------------------------- | ------------------ |
-| Windows  | `netstat -ano` + `tasklist`      | `taskkill /F /PID` |
-| macOS    | `lsof -iTCP -sTCP:LISTEN`        | `kill -9`          |
-| Linux    | `ss -tunlp` (fallback `netstat`) | `kill -9`          |
+| Platform | Process Detection                | Process Killing                             | Suspend/Resume                    |
+| -------- | -------------------------------- | ------------------------------------------- | --------------------------------- |
+| Windows  | `netstat -ano` + `tasklist`      | `taskkill /F /T /PID` + `taskkill /F /IM`   | PowerShell NtSuspendProcess/NtResumeProcess |
+| macOS    | `lsof -iTCP -sTCP:LISTEN`        | `kill -9`                                   | `kill -SIGSTOP` / `kill -SIGCONT`|
+| Linux    | `ss -tunlp` (fallback `netstat`) | `kill -9`                                   | `kill -SIGSTOP` / `kill -SIGCONT`|
 
 ## Security
 
