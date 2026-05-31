@@ -8,6 +8,8 @@ import { ConfirmModal } from "./components/ConfirmModal";
 import { KillByPort } from "./components/KillByPort";
 import { LoadingState } from "./components/LoadingState";
 import { EmptyState } from "./components/EmptyState";
+import { Button } from "./components/ui/button";
+import { Input } from "./components/ui/input";
 
 function isSystemProcess(proc: ProcessInfo): boolean {
   if (proc.pid < 1000) return true;
@@ -214,15 +216,11 @@ export default function App() {
     return unsub;
   }, []);
 
-  const btnBase = "flex h-9 items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-900 px-3 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/40";
-  const btnActive = `${btnBase} border-emerald-500/40 text-emerald-400 hover:border-emerald-500/60 hover:text-emerald-300`;
-  const btnInactive = `${btnBase} text-gray-400 hover:border-gray-600 hover:text-white`;
-
   return (
-    <div className="flex h-screen flex-col bg-gray-900 text-white">
+    <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
       {/* Error toast */}
       {toast && (
-        <div className="absolute left-1/2 top-4 z-50 -translate-x-1/2 animate-fade-in rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2.5 text-sm font-medium text-red-300 shadow-lg backdrop-blur-sm">
+        <div className="absolute left-1/2 top-4 z-50 -translate-x-1/2 animate-fade-in rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-2.5 text-sm font-medium text-destructive shadow-lg backdrop-blur-sm">
           <span className="flex items-center gap-2">
             <XCircle className="h-4 w-4 shrink-0" />
             {toast}
@@ -231,14 +229,14 @@ export default function App() {
       )}
 
       {/* Header */}
-      <header className="shrink-0 border-b border-gray-700/60 bg-gray-800/80 px-6 py-4 backdrop-blur-md">
+      <header className="shrink-0 border-b border-border/60 bg-card/80 px-6 py-4 backdrop-blur-md">
         <div className="flex items-center justify-between gap-4">
           {/* Title */}
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg">
               <img src={appIcon} className="h-full w-full" alt="Dtask" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-white">
+            <h1 className="text-xl font-bold tracking-tight text-foreground">
               Dtask
             </h1>
           </div>
@@ -247,73 +245,75 @@ export default function App() {
           <div className="flex items-center gap-3">
             {/* Search input */}
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <input
-                type="text"
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by PID, name, or port…"
-                className="h-9 w-64 rounded-lg border border-gray-700 bg-gray-900 pl-9 pr-3 text-sm text-white placeholder-gray-500 transition-colors focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/30"
+                className="w-64 pl-9"
               />
             </div>
 
             {/* Manual refresh */}
-            <button
+            <Button
+              variant="outline"
+              size="icon"
               onClick={refresh}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-700 bg-gray-900 text-gray-400 transition-colors hover:border-gray-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
               aria-label="Refresh process list"
               title="Refresh (Ctrl+R)"
             >
-              <RotateCw
-                className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
-              />
-            </button>
+              <RotateCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            </Button>
 
             {/* Batch kill */}
             {selectedPids.size > 0 && (
-              <button
+              <Button
+                variant="destructive"
+                size="sm"
                 onClick={handleBatchKill}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm font-semibold text-red-400 transition-colors hover:border-red-500/60 hover:bg-red-500/20 hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500/50"
               >
                 <Trash2 className="h-4 w-4" />
                 Kill Selected ({selectedPids.size})
-              </button>
+              </Button>
             )}
 
             {/* Group toggle */}
-            <button
+            <Button
+              variant={groupByName ? "secondary" : "outline"}
+              size="sm"
               onClick={() => setGroupByName(!groupByName)}
-              className={groupByName ? btnActive : btnInactive}
             >
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M21 8V5a2 2 0 0 0-2-2h-3" /><path d="M16 21h3a2 2 0 0 0 2-2v-3" /><path d="M3 16v3a2 2 0 0 0 2 2h3" />
               </svg>
               Group
-            </button>
+            </Button>
 
             {/* Cmdline toggle */}
-            <button
+            <Button
+              variant={showCmdline ? "secondary" : "outline"}
+              size="sm"
               onClick={() => setShowCmdline(!showCmdline)}
-              className={showCmdline ? btnActive : btnInactive}
             >
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" />
               </svg>
               Cmdline
-            </button>
+            </Button>
 
             {/* Export CSV */}
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleExportCsv}
-              className={btnInactive}
               title="Export CSV"
             >
               <Download className="h-3.5 w-3.5" />
               CSV
-            </button>
+            </Button>
 
             {/* Auto-refresh toggle */}
-            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-700 bg-gray-900 px-3 py-1.5 text-sm text-gray-400 transition-colors hover:border-gray-600 hover:text-white">
+            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-border hover:text-foreground">
               <span className="text-xs font-medium">Auto</span>
               <div className="relative">
                 <input
@@ -322,8 +322,8 @@ export default function App() {
                   onChange={(e) => setAutoRefresh(e.target.checked)}
                   className="peer sr-only"
                 />
-                <div className="h-5 w-9 rounded-full bg-gray-700 transition-colors peer-checked:bg-emerald-500/70" />
-                <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+                <div className="h-5 w-9 rounded-full bg-muted transition-colors peer-checked:bg-primary/70" />
+                <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-background shadow-sm transition-transform peer-checked:translate-x-4" />
               </div>
             </label>
           </div>
@@ -331,7 +331,7 @@ export default function App() {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto px-6 py-5">
+      <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-6 py-5">
         {loading && processes.length === 0 ? (
           <LoadingState />
         ) : filtered.length === 0 ? (
@@ -361,8 +361,8 @@ export default function App() {
       </main>
 
       {/* Footer status */}
-      <footer className="shrink-0 border-t border-gray-700/60 bg-gray-800/50 px-6 py-2">
-        <p className="text-xs text-gray-500">
+      <footer className="shrink-0 border-t border-border/60 bg-card/50 px-6 py-2">
+        <p className="text-xs text-muted-foreground">
           {filtered.length} process{filtered.length !== 1 ? "es" : ""}
           {search.trim() && ` of ${processes.length} total`}
           {suspendedPids.size > 0 && ` · ${suspendedPids.size} suspended`}
