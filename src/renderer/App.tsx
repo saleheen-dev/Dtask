@@ -433,11 +433,12 @@ export default function App() {
                 </Button>
 
                 {/* Auto-refresh toggle */}
-                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-border hover:text-foreground">
+                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 h-7 text-sm text-muted-foreground transition-colors hover:border-border hover:text-foreground mr-2">
                   <span className="text-xs font-medium">Auto</span>
                   <Switch
                     checked={autoRefresh}
                     onCheckedChange={setAutoRefresh}
+                    className="h-5"
                   />
                 </label>
               </div>
