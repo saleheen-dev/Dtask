@@ -252,12 +252,20 @@ export function ProcessTable({
                 </TableCell>
               </TableRow>
               {expanded &&
-                procs.map((proc) => (
+                procs.map((proc, idx) => {
+                  const conflict = proc.ports.some((p) => conflictingPorts.has(p));
+                  const added = highlights.get(proc.pid);
+                  const hlClass =
+                    added === "added"
+                      ? "animate-pulse bg-emerald-500/10 border-l-2 border-l-emerald-400"
+                      : "";
+                  const conflictClass = conflict ? "bg-amber-500/5" : "";
+                  return (
                   <TableRow
                     key={proc.pid}
-                    className={getRowClassName(proc)}
+                    className={`bg-muted/10 hover:bg-muted/20 ${idx % 2 === 0 ? "bg-muted/5" : ""} ${conflictClass} ${hlClass}`}
                   >
-                    <TableCell className={processTableColumnClassNames.select}>
+                    <TableCell className={`${processTableColumnClassNames.select} pl-6`}>
                       <Checkbox
                         checked={selectedPids.has(proc.pid)}
                         onCheckedChange={() => onToggleSelect(proc.pid)}
@@ -295,7 +303,8 @@ export function ProcessTable({
                       />
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
             </Fragment>
           );
         })}
