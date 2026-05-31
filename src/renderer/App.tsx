@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Search, RotateCw, Trash2, XCircle, Download } from "lucide-react";
+import { Search, RotateCw, Trash2, XCircle, Download, Crosshair } from "lucide-react";
 import appIcon from "../../resources/icon.png";
 import type { ProcessInfo } from "../common/types";
 import { useProcesses } from "./hooks/useProcesses";
@@ -10,6 +10,7 @@ import { LoadingState } from "./components/LoadingState";
 import { EmptyState } from "./components/EmptyState";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
+import { Kbd, KbdGroup } from "./components/ui/kbd";
 
 function isSystemProcess(proc: ProcessInfo): boolean {
   if (proc.pid < 1000) return true;
@@ -276,6 +277,21 @@ export default function App() {
                 Kill Selected ({selectedPids.size})
               </Button>
             )}
+
+            {/* Kill by port */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowKillByPort(true)}
+              className="gap-1.5"
+            >
+              <Crosshair className="h-3.5 w-3.5" />
+              <KbdGroup>
+                <Kbd>Ctrl</Kbd>
+                <span>+</span>
+                <Kbd>K</Kbd>
+              </KbdGroup>
+            </Button>
 
             {/* Group toggle */}
             <Button
