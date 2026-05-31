@@ -16,6 +16,7 @@ import { KillByPort } from "./components/KillByPort";
 import { LoadingState } from "./components/LoadingState";
 import { EmptyState } from "./components/EmptyState";
 import { Button } from "./components/ui/button";
+import { Switch } from "./components/ui/switch";
 import { Kbd, KbdGroup } from "./components/ui/kbd";
 import {
   InputGroup,
@@ -369,7 +370,7 @@ export default function App() {
                   className="gap-1.5"
                 >
                   <Crosshair className="h-3.5 w-3.5" />
-                  <KbdGroup>
+                  <KbdGroup className="-mr-1">
                     <Kbd>Ctrl</Kbd>
                     <span>+</span>
                     <Kbd>K</Kbd>
@@ -432,18 +433,12 @@ export default function App() {
                 </Button>
 
                 {/* Auto-refresh toggle */}
-                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-border hover:text-foreground mr-2">
+                <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-border hover:text-foreground">
                   <span className="text-xs font-medium">Auto</span>
-                  <div className="relative">
-                    <input
-                      type="checkbox"
-                      checked={autoRefresh}
-                      onChange={(e) => setAutoRefresh(e.target.checked)}
-                      className="peer sr-only"
-                    />
-                    <div className="h-5 w-9 rounded-full bg-muted transition-colors peer-checked:bg-primary/70" />
-                    <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-background shadow-sm transition-transform peer-checked:translate-x-4" />
-                  </div>
+                  <Switch
+                    checked={autoRefresh}
+                    onCheckedChange={setAutoRefresh}
+                  />
                 </label>
               </div>
             </div>
