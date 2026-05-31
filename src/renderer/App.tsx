@@ -11,6 +11,7 @@ import { EmptyState } from "./components/EmptyState";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Kbd, KbdGroup } from "./components/ui/kbd";
+import { TooltipProvider } from "./components/ui/tooltip";
 
 function isSystemProcess(proc: ProcessInfo): boolean {
   if (proc.pid < 1000) return true;
@@ -218,7 +219,8 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
+    <TooltipProvider>
+      <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
       {/* Error toast */}
       {toast && (
         <div className="absolute left-1/2 top-4 z-50 -translate-x-1/2 animate-fade-in rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-2.5 text-sm font-medium text-destructive shadow-lg backdrop-blur-sm">
@@ -417,5 +419,6 @@ export default function App() {
         />
       )}
     </div>
+    </TooltipProvider>
   );
 }

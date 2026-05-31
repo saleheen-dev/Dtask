@@ -3,6 +3,11 @@ import { Pause, Play, Trash2 } from "lucide-react";
 import type { ProcessInfo } from "../../common/types";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "./ui/tooltip";
 
 export function isSystemProcess(process: ProcessInfo): boolean {
   if (process.pid < 1000) return true;
@@ -76,12 +81,18 @@ export function ProcessProtocolCell({ protocol }: { protocol: string }) {
 
 export function ProcessCmdlineCell({ cmdline }: { cmdline?: string }) {
   return (
-    <span
-      className="block max-w-[300px] truncate text-muted-foreground"
-      title={cmdline ?? ""}
-    >
-      {cmdline || "—"}
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="block max-w-[300px] truncate text-muted-foreground cursor-default">
+          {cmdline || "—"}
+        </span>
+      </TooltipTrigger>
+      {cmdline && (
+        <TooltipContent side="bottom" align="start" className="max-w-[500px] break-all">
+          {cmdline}
+        </TooltipContent>
+      )}
+    </Tooltip>
   );
 }
 
