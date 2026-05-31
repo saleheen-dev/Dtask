@@ -32,6 +32,8 @@ async function createWindow() {
   mainWindow = new BrowserWindow({
     width: state.width,
     height: state.height,
+    minWidth: 840,
+    minHeight: 500,
     x: state.x,
     y: state.y,
     show: false,
