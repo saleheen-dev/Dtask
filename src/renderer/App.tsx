@@ -3,6 +3,7 @@ import {
   RotateCw,
   Trash2,
   XCircle,
+  X,
   Download,
   Crosshair,
   SearchIcon,
@@ -22,6 +23,7 @@ import {
   InputGroup,
   InputGroupInput,
   InputGroupAddon,
+  InputGroupButton,
 } from "./components/ui/input-group";
 import { TooltipProvider } from "./components/ui/tooltip";
 import {
@@ -142,6 +144,11 @@ export default function App() {
 
   const handleKillClick = useCallback((proc: ProcessInfo) => {
     setPendingKill(proc);
+  }, []);
+
+  const handleClearSearch = useCallback(() => {
+    setSearch("");
+    searchRef.current?.focus();
   }, []);
 
   const handleSuspend = useCallback(
@@ -307,11 +314,24 @@ export default function App() {
                   placeholder="Search by PID, name, or port…"
                 />
                 <InputGroupAddon align="inline-end">
-                  <KbdGroup>
-                    <Kbd>Ctrl</Kbd>
-                    <span>+</span>
-                    <Kbd>S</Kbd>
-                  </KbdGroup>
+                  {search ? (
+                    <InputGroupButton
+                      size="icon-xs"
+                      variant="ghost"
+                      onClick={handleClearSearch}
+                      aria-label="Clear search"
+                      title="Clear search"
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </InputGroupButton>
+                  ) : (
+                    <KbdGroup>
+                      <Kbd>Ctrl</Kbd>
+                      <span>+</span>
+                      <Kbd>S</Kbd>
+                    </KbdGroup>
+                  )}
                 </InputGroupAddon>
               </InputGroup>
 
