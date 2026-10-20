@@ -21,7 +21,6 @@ A modern, open-source cross-platform desktop app built with **Electron v41.3.0**
 - **Port conflict detector** — ports shared by multiple processes are highlighted with an amber indicator
 - **Group by executable** — collapse same-name processes (e.g. `chrome.exe × 12`) into one expandable row
 - **Command-line column** — toggle to show full executable paths and arguments, with hover tooltip
-- **Export CSV** — download `dtask-processes-*.csv` with all filtered rows
 - **Suspend / Resume** — pause a process (yellow indicator) and resume it later
 - **Change highlighting** — new processes since the last refresh pulse green for 2.5 seconds
 - **Auto-refresh** — toggle to refresh every 3 seconds

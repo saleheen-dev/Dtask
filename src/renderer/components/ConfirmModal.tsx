@@ -32,7 +32,7 @@ export function ConfirmModal({
         <div
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
             isSystemProcess
-              ? "bg-amber-500/15 text-amber-400"
+              ? "bg-warning/15 text-warning"
               : "bg-destructive/15 text-destructive"
           }`}
         >
@@ -51,7 +51,7 @@ export function ConfirmModal({
               {count && count > 1 ? (
                 <span>Are you sure you want to kill <strong className="text-foreground">{count} processes</strong>?</span>
               ) : isSystemProcess ? (
-                <span><strong className="text-amber-400">Warning:</strong> This appears to be a system process. Killing it may cause instability.</span>
+                <span><strong className="text-warning">Warning:</strong> This appears to be a system process. Killing it may cause instability.</span>
               ) : (
                 <span>Are you sure you want to kill <strong className="text-foreground">{name}</strong> <span className="text-muted-foreground">(PID {pid})</span>?</span>
               )}

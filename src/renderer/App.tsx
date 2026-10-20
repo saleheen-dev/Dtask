@@ -4,7 +4,9 @@ import {
   Trash2,
   XCircle,
   X,
-  Download,
+  Check,
+  CheckCircle2,
+  Info,
   Crosshair,
   SearchIcon,
 } from "lucide-react";
@@ -26,6 +28,7 @@ import {
   InputGroupButton,
 } from "./components/ui/input-group";
 import { TooltipProvider } from "./components/ui/tooltip";
+import { cn } from "./lib/utils";
 import {
   CommandDialog,
   CommandInput,
@@ -33,6 +36,27 @@ import {
   CommandGroup,
   CommandItem,
 } from "./components/ui/command";
+
+type ToastVariant = "error" | "success" | "info";
+
+const TOAST_STYLES: Record<
+  ToastVariant,
+  { className: string; Icon: typeof Info }
+> = {
+  error: {
+    className:
+      "border-destructive/40 bg-destructive/10 text-destructive shadow-destructive/10",
+    Icon: XCircle,
+  },
+  success: {
+    className: "border-success/40 bg-success/10 text-success shadow-success/10",
+    Icon: CheckCircle2,
+  },
+  info: {
+    className: "border-border bg-card/95 text-foreground shadow-black/20",
+    Icon: Info,
+  },
+};
 
 function isSystemProcess(proc: ProcessInfo): boolean {
   if (proc.pid < 1000) return true;
@@ -71,7 +95,10 @@ export default function App() {
   const [showCmdline, setShowCmdline] = useState(false);
   const [groupByName, setGroupByName] = useState(false);
   const [suspendedPids, setSuspendedPids] = useState<Set<number>>(new Set());
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    variant: ToastVariant;
+  } | null>(null);
 
   const {
     processes,
@@ -87,13 +114,24 @@ export default function App() {
     autoRefresh,
   });
 
-  // Auto-dismiss error toast after 3 seconds
+  const showToast = useCallback(
+    (message: string, variant: ToastVariant = "info") => {
+      setToast({ message, variant });
+    },
+    [],
+  );
+
+  // Auto-dismiss toast after 3 seconds
   useEffect(() => {
-    if (!error) return;
-    setToast(error);
+    if (!toast) return;
     const timer = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(timer);
-  }, [error]);
+  }, [toast]);
+
+  useEffect(() => {
+    if (!error) return;
+    showToast(error, "error");
+  }, [error, showToast]);
 
   // Keyboard shortcuts: Ctrl+R for refresh, Ctrl+K for kill-by-port, Ctrl+S for search focus, Escape to dismiss
   useEffect(() => {
@@ -157,12 +195,13 @@ export default function App() {
       if (ok) {
         setSuspendedPids((prev) => new Set(prev).add(proc.pid));
       } else {
-        setToast(
+        showToast(
           `Failed to suspend ${proc.name} (PID ${proc.pid}). Try running as administrator.`,
+          "error",
         );
       }
     },
-    [suspendProcess],
+    [suspendProcess, showToast],
   );
 
   const handleResume = useCallback(
@@ -175,10 +214,10 @@ export default function App() {
           return next;
         });
       } else {
-        setToast(`Failed to resume ${proc.name} (PID ${proc.pid}).`);
+        showToast(`Failed to resume ${proc.name} (PID ${proc.pid}).`, "error");
       }
     },
-    [resumeProcess],
+    [resumeProcess, showToast],
   );
 
   const handleToggleSelect = useCallback((pid: number) => {
@@ -221,12 +260,12 @@ export default function App() {
     (portStr: string) => {
       const port = parseInt(portStr, 10);
       if (!Number.isFinite(port)) {
-        setToast("Invalid port number");
+        showToast("Invalid port number", "error");
         return;
       }
       const found = processes.find((p) => p.ports.includes(port));
       if (!found) {
-        setToast(`No process found on port ${port}`);
+        showToast(`No process found on port ${port}`, "info");
         return;
       }
       setShowKillByPort(false);
@@ -246,27 +285,6 @@ export default function App() {
     setPendingKill(null);
   }, []);
 
-  const handleExportCsv = useCallback(() => {
-    const headers = "PID,Name,Ports,Protocol,Address,Command Line";
-    const rows = filtered.map((p) => {
-      const cmd = p.cmdline ? `"${p.cmdline.replace(/"/g, '""')}"` : "";
-      return `${p.pid},"${p.name}","${p.ports.join("; ")}",${p.protocol},${p.address ?? ""},${cmd}`;
-    });
-    const csv = [headers, ...rows].join("\n");
-    try {
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `dtask-processes-${Date.now()}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-      setToast("CSV exported");
-    } catch {
-      setToast("Failed to export CSV");
-    }
-  }, [filtered]);
-
   useEffect(() => {
     const unsub = window.electronAPI.onShowKillByPort(() =>
       setShowKillByPort(true),
@@ -277,12 +295,22 @@ export default function App() {
   return (
     <TooltipProvider>
       <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
-        {/* Error toast */}
+        {/* Toast */}
         {toast && (
-          <div className="absolute left-1/2 top-4 z-50 -translate-x-1/2 animate-fade-in rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-2.5 text-sm font-medium text-destructive shadow-lg backdrop-blur-sm">
+          <div
+            role="status"
+            aria-live="polite"
+            className={cn(
+              "absolute left-1/2 top-4 z-50 -translate-x-1/2 animate-fade-in rounded-lg border px-4 py-2.5 text-sm font-medium shadow-lg backdrop-blur-sm",
+              TOAST_STYLES[toast.variant].className,
+            )}
+          >
             <span className="flex items-center gap-2">
-              <XCircle className="h-4 w-4 shrink-0" />
-              {toast}
+              {(() => {
+                const Icon = TOAST_STYLES[toast.variant].Icon;
+                return <Icon className="h-4 w-4 shrink-0" />;
+              })()}
+              {toast.message}
             </span>
           </div>
         )}
@@ -441,17 +469,6 @@ export default function App() {
                   Cmdline
                 </Button>
 
-                {/* Export CSV */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportCsv}
-                  title="Export CSV"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  CSV
-                </Button>
-
                 {/* Auto-refresh toggle */}
                 <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 h-7 text-sm text-muted-foreground transition-colors hover:border-border hover:text-foreground mr-2">
                   <span className="text-xs font-medium">Auto</span>
@@ -597,15 +614,6 @@ export default function App() {
                   <line x1="12" y1="19" x2="20" y2="19" />
                 </svg>
                 {showCmdline ? "Hide" : "Show"} Command Line
-              </CommandItem>
-              <CommandItem
-                onSelect={() => {
-                  handleExportCsv();
-                  setShowMenu(false);
-                }}
-              >
-                <Download className="h-4 w-4" />
-                Export CSV
               </CommandItem>
               <CommandItem
                 onSelect={() => {

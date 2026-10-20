@@ -39,10 +39,10 @@ export function ProcessNameCell({
   return (
     <span className={`flex items-center gap-2${indent ? " pl-8" : ""}`}>
       {conflict && (
-        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+        <span className="h-1.5 w-1.5 rounded-full bg-warning" />
       )}
       {suspended && (
-        <span className="h-1.5 w-1.5 rounded-full bg-yellow-400" />
+        <span className="h-1.5 w-1.5 rounded-full bg-suspended" />
       )}
       <span className="max-w-[180px] truncate" title={proc.name}>
         {proc.name}
@@ -50,7 +50,7 @@ export function ProcessNameCell({
       {suspended && (
         <Badge
           variant="outline"
-          className="border-yellow-500/40 text-yellow-400"
+          className="border-suspended/40 text-suspended"
         >
           Suspended
         </Badge>
@@ -58,7 +58,7 @@ export function ProcessNameCell({
       {sys && (
         <Badge
           variant="outline"
-          className="border-amber-500/40 text-amber-400"
+          className="border-warning/40 text-warning"
         >
           System
         </Badge>
@@ -124,7 +124,7 @@ export function ProcessActionsCell({
               ? `Resume process ${proc.name} (PID ${proc.pid})`
               : `Suspend process ${proc.name} (PID ${proc.pid})`
           }
-          className="border-yellow-500/30 hover:border-yellow-500/60 hover:bg-yellow-500/10"
+          className="border-suspended/30 hover:border-suspended/60 hover:bg-suspended/10"
         >
           {suspended ? (
             <Play className="h-3 w-3" />
