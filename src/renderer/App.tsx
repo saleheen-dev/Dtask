@@ -11,6 +11,12 @@ import {
   Moon,
   Monitor,
   Terminal,
+  Boxes,
+  Network,
+  TriangleAlert,
+  Pause,
+  ListChecks,
+  Loader2,
   Crosshair,
   SearchIcon,
 } from "lucide-react";
@@ -26,6 +32,8 @@ import { EmptyState } from "./components/EmptyState";
 import { LogsPanel } from "./components/LogsPanel";
 import { ProcessLogsDialog } from "./components/ProcessLogsDialog";
 import { ModeToggle } from "./components/mode-toggle";
+import { StatTile } from "./components/dashboard/stat-tile";
+import { InsightsPanel } from "./components/dashboard/insights-panel";
 import { Button } from "./components/ui/button";
 import { Switch } from "./components/ui/switch";
 import { Kbd, KbdGroup } from "./components/ui/kbd";
@@ -181,6 +189,11 @@ export default function App() {
     [processes, search],
   );
 
+  const totalPorts = useMemo(
+    () => processes.reduce((sum, p) => sum + p.ports.length, 0),
+    [processes],
+  );
+
   const conflictingPorts = useMemo(() => {
     const counts = new Map<number, number>();
     for (const p of processes) {
@@ -309,7 +322,7 @@ export default function App() {
 
   return (
     <TooltipProvider>
-      <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
+      <div className="relative flex h-screen flex-col overflow-hidden bg-background text-foreground">
         {/* Toast */}
         {toast && (
           <div
@@ -513,40 +526,121 @@ export default function App() {
           </div>
         </header>
 
-        {/* Main content */}
-        <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-6 py-5">
-          {loading && processes.length === 0 ? (
-            <LoadingState />
-          ) : filtered.length === 0 ? (
-            <EmptyState
-              message={
-                search.trim()
-                  ? `No processes matching "${search.trim()}"`
-                  : "No processes found"
-              }
-            />
-          ) : (
-            <ProcessTable
-              processes={filtered}
-              onKill={handleKillClick}
-              onViewLogs={setLogProcess}
-              onSuspend={handleSuspend}
-              onResume={handleResume}
-              selectedPids={selectedPids}
-              onToggleSelect={handleToggleSelect}
-              onToggleSelectAll={handleToggleSelectAll}
-              conflictingPorts={conflictingPorts}
-              showCmdline={showCmdline}
-              groupByName={groupByName}
-              suspendedPids={suspendedPids}
-              highlights={highlights}
-            />
-          )}
+        {/* Dashboard */}
+        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 xl:overflow-hidden">
+          <div className="flex flex-col gap-4 xl:h-full xl:min-h-0">
+            {/* KPI row */}
+            <div className="grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+              <StatTile
+                label="Processes"
+                value={processes.length}
+                icon={Boxes}
+                hint={
+                  search.trim() ? `${filtered.length} shown` : "detected"
+                }
+              />
+              <StatTile
+                label="Listening ports"
+                value={totalPorts}
+                icon={Network}
+                tone="info"
+                hint={`${processes.filter((p) => p.ports.length > 0).length} bound`}
+              />
+              <StatTile
+                label="Port conflicts"
+                value={conflictingPorts.size}
+                icon={TriangleAlert}
+                tone={conflictingPorts.size > 0 ? "warning" : "default"}
+                hint={conflictingPorts.size > 0 ? "shared ports" : "all clear"}
+              />
+              <StatTile
+                label="Suspended"
+                value={suspendedPids.size}
+                icon={Pause}
+                tone={suspendedPids.size > 0 ? "info" : "default"}
+                hint={suspendedPids.size > 0 ? "paused" : "none"}
+              />
+              <StatTile
+                label="Selected"
+                value={selectedPids.size}
+                icon={ListChecks}
+                tone={selectedPids.size > 0 ? "success" : "default"}
+                hint={selectedPids.size > 0 ? "ready to kill" : "none"}
+              />
+            </div>
+
+            {/* Table + insights */}
+            <div className="grid grid-cols-1 gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]">
+              <section className="flex flex-col overflow-hidden rounded-xl border border-border bg-card/40 xl:min-h-0">
+                <header className="flex shrink-0 items-center gap-2 border-b border-border/60 px-3 py-2">
+                  <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    Processes
+                  </h2>
+                  <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[10.5px] text-muted-foreground">
+                    {filtered.length}
+                  </span>
+                  {selectedPids.size > 0 && (
+                    <span className="rounded-md border border-success/40 bg-success/10 px-1.5 py-0.5 font-mono text-[10.5px] text-success">
+                      {selectedPids.size} selected
+                    </span>
+                  )}
+                  {loading && (
+                    <Loader2
+                      className="ml-auto h-3.5 w-3.5 animate-spin text-muted-foreground"
+                      aria-label="Refreshing"
+                    />
+                  )}
+                </header>
+
+                <div className="min-h-0 flex-1 p-3 xl:overflow-auto">
+                  {loading && processes.length === 0 ? (
+                    <LoadingState />
+                  ) : filtered.length === 0 ? (
+                    <EmptyState
+                      message={
+                        search.trim()
+                          ? `No processes matching "${search.trim()}"`
+                          : "No processes found"
+                      }
+                    />
+                  ) : (
+                    <ProcessTable
+                      processes={filtered}
+                      onKill={handleKillClick}
+                      onViewLogs={setLogProcess}
+                      onSuspend={handleSuspend}
+                      onResume={handleResume}
+                      selectedPids={selectedPids}
+                      onToggleSelect={handleToggleSelect}
+                      onToggleSelectAll={handleToggleSelectAll}
+                      conflictingPorts={conflictingPorts}
+                      showCmdline={showCmdline}
+                      groupByName={groupByName}
+                      suspendedPids={suspendedPids}
+                      highlights={highlights}
+                    />
+                  )}
+                </div>
+              </section>
+
+              <InsightsPanel
+                processes={processes}
+                conflictingPorts={conflictingPorts}
+                suspendedPids={suspendedPids}
+                highlights={highlights}
+                onSelectProcess={(proc) => {
+                  setSearch(proc.name);
+                  searchRef.current?.focus();
+                }}
+              />
+            </div>
+          </div>
         </main>
 
+
         {/* Footer status */}
-        <footer className="shrink-0 border-t border-border/60 bg-card/50 px-6 py-2">
-          <p className="text-xs text-muted-foreground">
+        <footer className="shrink-0 border-t border-border/60 bg-card/50 px-6 py-1.5">
+          <p className="text-[11px] text-muted-foreground">
             {filtered.length} process{filtered.length !== 1 ? "es" : ""}
             {search.trim() && ` of ${processes.length} total`}
             {suspendedPids.size > 0 && ` · ${suspendedPids.size} suspended`}

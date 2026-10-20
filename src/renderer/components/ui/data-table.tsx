@@ -8,6 +8,8 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
+import { cn } from "../../lib/utils";
+
 import {
   Table,
   TableBody,
@@ -24,6 +26,7 @@ interface DataTableProps<TData, TValue> {
   onSortingChange?: OnChangeFn<SortingState>;
   getRowClassName?: (row: TData) => string | undefined;
   emptyMessage?: string;
+  className?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -33,6 +36,7 @@ export function DataTable<TData, TValue>({
   onSortingChange,
   getRowClassName,
   emptyMessage = "No results.",
+  className,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -44,7 +48,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-card/50">
+    <div className={cn("overflow-x-auto rounded-xl border border-border bg-card/50", className)}>
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
