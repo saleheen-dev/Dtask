@@ -10,15 +10,7 @@
  */
 import type { ProcessInfo } from "../../common/types";
 
-/* Local mirrors of the shared types so this mock compiles stand-alone. */
-type BridgeLogEntry = {
-  id: number;
-  timestamp: number;
-  level: "info" | "warn" | "error";
-  source: "main" | "renderer" | "system";
-  message: string;
-};
-
+/* Local mirror of the shared type so this mock compiles stand-alone. */
 type BridgeLogTarget = {
   pid: number;
   name: string;
@@ -108,29 +100,6 @@ export function installDevBridge(): boolean {
 
   const listeners = new Set<() => void>();
   const trayListeners = new Set<() => void>();
-  const logListeners = new Set<(entry: BridgeLogEntry) => void>();
-
-  const logs: BridgeLogEntry[] = [];
-  let logId = 1;
-
-  const pushLog = (level: BridgeLogEntry["level"], source: BridgeLogEntry["source"], message: string) => {
-    const entry: BridgeLogEntry = { id: logId++, timestamp: Date.now(), level, source, message };
-    logs.push(entry);
-    if (logs.length > 1000) logs.splice(0, logs.length - 1000);
-    logListeners.forEach((cb) => cb(entry));
-  };
-
-  // Mirror the browser console into the in-app log viewer.
-  const patchConsole = (level: BridgeLogEntry["level"]) => {
-    const original = console[level] ?? console.log;
-    console[level] = (...args: unknown[]) => {
-      original.apply(console, args);
-      pushLog(level, "renderer", args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" "));
-    };
-  };
-  (["log", "info", "warn", "error"] as const).forEach((level) =>
-    patchConsole(level === "warn" ? "warn" : level === "error" ? "error" : "info"),
-  );
 
   window.electronAPI = {
     listProcesses: async () => SAMPLE_PROCESSES,
@@ -159,18 +128,13 @@ export function installDevBridge(): boolean {
         trayListeners.delete(callback);
       };
     },
-    getLogs: async () => [...logs],
-    clearLogs: async () => {
-      logs.length = 0;
-    },
+    // The log viewer is only available in the desktop app - the browser
+    // preview keeps the API surface complete but without any log stream.
+    getLogs: async () => [],
+    clearLogs: async () => {},
     getLogFilePath: async () => null,
     revealLogFile: async () => null,
-    onLog: (callback: (entry: BridgeLogEntry) => void) => {
-      logListeners.add(callback);
-      return () => {
-        logListeners.delete(callback);
-      };
-    },
+    onLog: () => () => {},
     getBridgeLogTarget: async (pid: number): Promise<BridgeLogTarget> => ({
       pid,
       name: "node.exe",
@@ -210,7 +174,5 @@ export function installDevBridge(): boolean {
     "%c[dev-bridge] Electron API mocked - browser preview mode",
     "color:#34d399",
   );
-  pushLog("info", "system", "Browser preview mode: Electron API mocked (no real process data).");
-  pushLog("info", "renderer", "Renderer ready - logs from the browser console appear here.");
   return true;
 }
