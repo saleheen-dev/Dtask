@@ -27,6 +27,7 @@ A modern, open-source cross-platform desktop app built with **Electron v41.3.0**
 - **System tray** — minimize to tray on Windows/Linux; right-click → Kill by port
 - **Window state persistence** — remembers size and position across restarts
 - **Dark-mode-first** — modern UI with shadcn/ui components and Tailwind CSS v4
+- **Light / Dark / System theme** — shadcn dropdown toggle, remembered between launches
 - **Responsive header** — full toolbar on wide windows, hamburger command menu on narrow
 
 ## Install

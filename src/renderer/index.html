@@ -1,11 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="./index.css" />
   <title>Dtask</title>
+  <script>
+    // Apply the saved theme before first paint to avoid a flash of the wrong theme.
+    // `?theme=light|dark|system` overrides the stored preference (handy for debugging).
+    (function () {
+      try {
+        var forced = new URLSearchParams(window.location.search).get("theme");
+        var stored =
+          forced === "light" || forced === "dark" || forced === "system"
+            ? forced
+            : localStorage.getItem("dtask-theme") || "dark";
+        if (forced) localStorage.setItem("dtask-theme", forced);
+        var resolved =
+          stored === "system"
+            ? window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+            : stored;
+        document.documentElement.classList.toggle("dark", resolved === "dark");
+        document.documentElement.classList.toggle("light", resolved === "light");
+        document.documentElement.style.colorScheme = resolved;
+      } catch (e) {
+        document.documentElement.classList.add("dark");
+      }
+    })();
+  </script>
 </head>
 
 <body>

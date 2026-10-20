@@ -7,17 +7,22 @@ import {
   Check,
   CheckCircle2,
   Info,
+  Sun,
+  Moon,
+  Monitor,
   Crosshair,
   SearchIcon,
 } from "lucide-react";
 import appIcon from "../../resources/icon.png";
 import type { ProcessInfo } from "../common/types";
 import { useProcesses } from "./hooks/useProcesses";
+import { useTheme } from "./hooks/useTheme";
 import { ProcessTable } from "./components/ProcessTable";
 import { ConfirmModal } from "./components/ConfirmModal";
 import { KillByPort } from "./components/KillByPort";
 import { LoadingState } from "./components/LoadingState";
 import { EmptyState } from "./components/EmptyState";
+import { ModeToggle } from "./components/mode-toggle";
 import { Button } from "./components/ui/button";
 import { Switch } from "./components/ui/switch";
 import { Kbd, KbdGroup } from "./components/ui/kbd";
@@ -82,6 +87,7 @@ function filterProcesses(
 }
 
 export default function App() {
+  const { theme, setTheme } = useTheme();
   const [search, setSearch] = useState("");
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [pendingKill, setPendingKill] = useState<ProcessInfo | null>(null);
@@ -363,6 +369,9 @@ export default function App() {
                 </InputGroupAddon>
               </InputGroup>
 
+              {/* Theme toggle */}
+              <ModeToggle />
+
               {/* Menu button (small screens) */}
               <Button
                 variant="outline"
@@ -634,6 +643,38 @@ export default function App() {
                   <circle cx="12" cy="12" r="3" />
                 </svg>
                 Auto-refresh: {autoRefresh ? "On" : "Off"}
+              </CommandItem>
+            </CommandGroup>
+            <CommandGroup heading="Theme">
+              <CommandItem
+                onSelect={() => {
+                  setTheme("light");
+                  setShowMenu(false);
+                }}
+              >
+                <Sun className="h-4 w-4" />
+                Light
+                {theme === "light" && <Check className="ml-auto h-4 w-4" />}
+              </CommandItem>
+              <CommandItem
+                onSelect={() => {
+                  setTheme("dark");
+                  setShowMenu(false);
+                }}
+              >
+                <Moon className="h-4 w-4" />
+                Dark
+                {theme === "dark" && <Check className="ml-auto h-4 w-4" />}
+              </CommandItem>
+              <CommandItem
+                onSelect={() => {
+                  setTheme("system");
+                  setShowMenu(false);
+                }}
+              >
+                <Monitor className="h-4 w-4" />
+                System
+                {theme === "system" && <Check className="ml-auto h-4 w-4" />}
               </CommandItem>
             </CommandGroup>
             {selectedPids.size > 0 && (
