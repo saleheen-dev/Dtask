@@ -22,6 +22,13 @@ import {
   installConsoleCapture,
   onLog,
 } from "./services/logger";
+import {
+  getProcessLogTarget,
+  readLogFile,
+  stopWatching,
+  watchLogFile,
+} from "./services/processLogs";
+import { restartProcess } from "./services/processControl";
 
 installConsoleCapture();
 
@@ -254,6 +261,42 @@ ipcMain.handle("logs:reveal", async () => {
   const file = getLogFilePath();
   if (file) shell.showItemInFolder(file);
   return file;
+});
+
+/* ----------------------- per-process log viewer ----------------------- */
+
+ipcMain.handle("process-logs:target", async (_event, pid: number) => {
+  return await getProcessLogTarget(pid);
+});
+
+ipcMain.handle("process-logs:read", async (_event, filePath: string) => {
+  return await readLogFile(filePath);
+});
+
+ipcMain.handle("process-logs:watch", async (_event, filePath: string) => {
+  stopWatching(filePath);
+  watchLogFile(filePath, (lines) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("process-logs:chunk", { path: filePath, lines });
+    }
+  });
+  return true;
+});
+
+ipcMain.handle("process-logs:unwatch", async (_event, filePath: string) => {
+  stopWatching(filePath);
+  return true;
+});
+
+ipcMain.handle("process-logs:reveal", async (_event, filePath: string) => {
+  shell.showItemInFolder(filePath);
+  return true;
+});
+
+ipcMain.handle("process:restart", async (_event, pid: number, logFile?: string) => {
+  const result = await restartProcess(pid, logFile);
+  addLog(result.success ? "info" : "error", "main", result.message);
+  return result;
 });
 
 // Push new log lines to the renderer as they happen.

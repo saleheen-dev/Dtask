@@ -24,6 +24,7 @@ export interface ProcessTableColumnOptions {
   onKill: (process: ProcessInfo) => void;
   onSuspend: (process: ProcessInfo) => void;
   onResume: (process: ProcessInfo) => void;
+  onViewLogs: (process: ProcessInfo) => void;
 }
 
 export function createProcessTableColumns({
@@ -37,6 +38,7 @@ export function createProcessTableColumns({
   onKill,
   onSuspend,
   onResume,
+  onViewLogs,
 }: ProcessTableColumnOptions): ColumnDef<ProcessInfo>[] {
   const columns: ColumnDef<ProcessInfo>[] = [
     {
@@ -124,6 +126,7 @@ export function createProcessTableColumns({
         onKill={onKill}
         onSuspend={onSuspend}
         onResume={onResume}
+        onViewLogs={onViewLogs}
       />
     ),
     enableSorting: false,

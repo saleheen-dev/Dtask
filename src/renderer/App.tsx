@@ -24,6 +24,7 @@ import { KillByPort } from "./components/KillByPort";
 import { LoadingState } from "./components/LoadingState";
 import { EmptyState } from "./components/EmptyState";
 import { LogsPanel } from "./components/LogsPanel";
+import { ProcessLogsDialog } from "./components/ProcessLogsDialog";
 import { ModeToggle } from "./components/mode-toggle";
 import { Button } from "./components/ui/button";
 import { Switch } from "./components/ui/switch";
@@ -108,6 +109,7 @@ export default function App() {
     variant: ToastVariant;
   } | null>(null);
   const [showLogs, setShowLogs] = useState(false);
+  const [logProcess, setLogProcess] = useState<ProcessInfo | null>(null);
 
   const {
     processes,
@@ -527,6 +529,7 @@ export default function App() {
             <ProcessTable
               processes={filtered}
               onKill={handleKillClick}
+              onViewLogs={setLogProcess}
               onSuspend={handleSuspend}
               onResume={handleResume}
               selectedPids={selectedPids}
@@ -579,6 +582,18 @@ export default function App() {
           <KillByPort
             onSubmit={handleKillByPortSubmit}
             onCancel={() => setShowKillByPort(false)}
+          />
+        )}
+
+        {/* Per-process log viewer */}
+        {logProcess && (
+          <ProcessLogsDialog
+            proc={logProcess}
+            onClose={() => setLogProcess(null)}
+            onRestarted={(message) => {
+              showToast(message, "success");
+              void refresh();
+            }}
           />
         )}
 

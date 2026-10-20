@@ -29,6 +29,8 @@ A modern, open-source cross-platform desktop app built with **Electron v41.3.0**
 - **Dark-mode-first** — modern UI with shadcn/ui components and Tailwind CSS v4
 - **Light / Dark / System theme** — shadcn dropdown toggle, remembered between launches
 - **In-app log viewer** — `Ctrl+Shift+L` opens a live log panel (main + renderer console), filterable, with the log file on disk
+- **Per-process logs** — every row has a "view logs" button that finds and tails the log files of that process (e.g. a dev server started by another agent)
+- **Restart a command** — from the log dialog you can kill and re-run the exact command (with its working directory), output appended to the log file
 - **Responsive header** — full toolbar on wide windows, hamburger command menu on narrow
 
 ## Install

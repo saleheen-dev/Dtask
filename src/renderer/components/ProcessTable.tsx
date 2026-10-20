@@ -25,6 +25,7 @@ interface ProcessTableProps {
   onKill: (process: ProcessInfo) => void;
   onSuspend: (process: ProcessInfo) => void;
   onResume: (process: ProcessInfo) => void;
+  onViewLogs: (process: ProcessInfo) => void;
   selectedPids: Set<number>;
   onToggleSelect: (pid: number) => void;
   onToggleSelectAll: () => void;
@@ -55,6 +56,7 @@ export function ProcessTable({
   onKill,
   onSuspend,
   onResume,
+  onViewLogs,
   selectedPids,
   onToggleSelect,
   onToggleSelectAll,
@@ -94,6 +96,7 @@ export function ProcessTable({
         onKill,
         onSuspend,
         onResume,
+        onViewLogs,
       }),
     [
       allSelected,
@@ -106,6 +109,7 @@ export function ProcessTable({
       onKill,
       onSuspend,
       onResume,
+      onViewLogs,
     ],
   );
 
@@ -306,6 +310,7 @@ export function ProcessTable({
                           onKill={onKill}
                           onSuspend={onSuspend}
                           onResume={onResume}
+                          onViewLogs={onViewLogs}
                         />
                       </TableCell>
                     </TableRow>

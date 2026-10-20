@@ -1,4 +1,4 @@
-import { Pause, Play, Trash2 } from "lucide-react";
+import { Pause, Play, ScrollText, Trash2 } from "lucide-react";
 
 import type { ProcessInfo } from "../../common/types";
 import { Badge } from "./ui/badge";
@@ -102,18 +102,29 @@ export function ProcessActionsCell({
   onKill,
   onSuspend,
   onResume,
+  onViewLogs,
 }: {
   proc: ProcessInfo;
   suspendedPids: ReadonlySet<number>;
   onKill: (process: ProcessInfo) => void;
   onSuspend: (process: ProcessInfo) => void;
   onResume: (process: ProcessInfo) => void;
+  onViewLogs: (process: ProcessInfo) => void;
 }) {
   const sys = isSystemProcess(proc);
   const suspended = suspendedPids.has(proc.pid);
 
   return (
     <div className="flex items-center justify-end gap-1">
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => onViewLogs(proc)}
+        aria-label={`View logs for ${proc.name} (PID ${proc.pid})`}
+        title="View logs for this process"
+      >
+        <ScrollText className="h-3 w-3" />
+      </Button>
       {!sys && (
         <Button
           variant="outline"
