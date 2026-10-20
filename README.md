@@ -18,7 +18,7 @@ A modern, open-source cross-platform desktop app built with **Electron v41.3.0**
 - **Sortable columns** — click any column header (PID, Name, Ports, Protocol) to sort ascending/descending
 - **Kill processes** — single-click kill with confirmation modal; system process protection (PID < 1000)
 - **Batch kill** — checkbox-select multiple processes and kill them all at once
-- **Kill by port** — `Ctrl+K` opens a dialog; enter a port to find and kill the owning process
+- **Kill by port** — `Ctrl+K` opens a dialog; type a port to see live which process holds it (name, PID, protocol, address) and kill it
 - **Port conflict detector** — ports shared by multiple processes are highlighted with an amber indicator
 - **Group by executable** — collapse same-name processes (e.g. `chrome.exe × 12`) into one expandable row
 - **Command-line column** — toggle to show full executable paths and arguments, with hover tooltip

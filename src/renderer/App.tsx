@@ -284,23 +284,10 @@ export default function App() {
     await killMultiple(pids);
   }, [pendingBatchKill, killMultiple]);
 
-  const handleKillByPortSubmit = useCallback(
-    (portStr: string) => {
-      const port = parseInt(portStr, 10);
-      if (!Number.isFinite(port)) {
-        showToast("Invalid port number", "error");
-        return;
-      }
-      const found = processes.find((p) => p.ports.includes(port));
-      if (!found) {
-        showToast(`No process found on port ${port}`, "info");
-        return;
-      }
-      setShowKillByPort(false);
-      setPendingKill(found);
-    },
-    [processes],
-  );
+  const handleKillByPortSelect = useCallback((proc: ProcessInfo) => {
+    setShowKillByPort(false);
+    setPendingKill(proc);
+  }, []);
 
   const handleKillConfirm = useCallback(async () => {
     if (!pendingKill) return;
@@ -674,7 +661,8 @@ export default function App() {
         {/* Kill-by-port dialog */}
         {showKillByPort && (
           <KillByPort
-            onSubmit={handleKillByPortSubmit}
+            processes={processes}
+            onSelect={handleKillByPortSelect}
             onCancel={() => setShowKillByPort(false)}
           />
         )}
