@@ -67,11 +67,44 @@ export function ProcessNameCell({
   );
 }
 
+const MAX_VISIBLE_PORTS = 3;
+
 export function ProcessPortsCell({ ports }: { ports: number[] }) {
+  if (ports.length === 0) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+
+  const visible = ports.slice(0, MAX_VISIBLE_PORTS);
+  const hidden = ports.length - visible.length;
+
   return (
-    <span className="font-mono text-muted-foreground">
-      {ports.length > 0 ? ports.join(", ") : "—"}
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="flex flex-wrap items-center gap-1">
+          {visible.map((port) => (
+            <span
+              key={port}
+              className="rounded border border-border/70 bg-muted/40 px-1 py-px font-mono text-[11px] leading-4"
+            >
+              {port}
+            </span>
+          ))}
+          {hidden > 0 && (
+            <span
+              className="rounded border border-warning/40 bg-warning/10 px-1 py-px font-mono text-[11px] leading-4 text-warning"
+              title={`${hidden} more ports`}
+            >
+              +{hidden}
+            </span>
+          )}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="left" align="start" className="max-w-md">
+        <span className="block max-h-64 overflow-y-auto break-words font-mono text-[11px]">
+          {ports.join(", ")}
+        </span>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -160,4 +193,5 @@ export const processTableColumnClassNames = {
   select: "w-[50px]",
   pid: "w-36",
   protocol: "w-32",
+  ports: "w-[210px]",
 } as const;
