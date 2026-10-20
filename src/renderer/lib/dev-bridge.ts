@@ -1,0 +1,183 @@
+/**
+ * Dev-only bridge: lets the renderer run in a plain browser (no Electron).
+ *
+ * `electron-vite dev --rendererOnly` only starts the Vite dev server, so you can
+ * open http://localhost:5173 in Chrome and inspect the UI. The real preload API
+ * is not available there, so we install a mock that serves sample data.
+ *
+ * This module is tree-shaken out of production builds (it is only imported when
+ * `import.meta.env.DEV` is true).
+ */
+import type { ProcessInfo } from "../../common/types";
+
+/* Local mirrors of the shared types so this mock compiles stand-alone. */
+type BridgeLogEntry = {
+  id: number;
+  timestamp: number;
+  level: "info" | "warn" | "error";
+  source: "main" | "renderer" | "system";
+  message: string;
+};
+
+type BridgeLogTarget = {
+  pid: number;
+  name: string;
+  commandLine: string;
+  executablePath: string;
+  workingDir: string | null;
+  files: { path: string; size: number; modified: number }[];
+  chain: unknown[];
+  error?: string;
+};
+
+const SAMPLE_PROCESSES: ProcessInfo[] = [
+  {
+    pid: 4400,
+    name: "chrome.exe",
+    ports: [5173, 9222],
+    protocol: "TCP",
+    address: "127.0.0.1",
+    cmdline: '"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" --remote-debugging-port=9222',
+  },
+  {
+    pid: 3328,
+    name: "node.exe",
+    ports: [4400, 56343],
+    protocol: "TCP",
+    address: "0.0.0.0",
+    cmdline: "node next/dist/server/lib/start-server.js",
+  },
+  {
+    pid: 1204,
+    name: "System",
+    ports: [135, 445],
+    protocol: "TCP",
+    address: "0.0.0.0",
+  },
+  {
+    pid: 8120,
+    name: "Code.exe",
+    ports: [],
+    protocol: "—",
+    cmdline: '"C:\\Program Files\\Microsoft VS Code\\Code.exe" --type=renderer',
+  },
+  {
+    pid: 0,
+    name: "System Idle Process",
+    ports: Array.from({ length: 78 }, (_, i) => 54503 + i * 7).filter(
+      (p) => p < 65535,
+    ),
+    protocol: "TCP",
+    address: "0.0.0.0",
+  },
+  {
+    pid: 9090,
+    name: "python.exe",
+    ports: [8000, 8001],
+    protocol: "TCP",
+    address: "127.0.0.1",
+    cmdline: "python -m http.server 8000",
+  },
+];
+
+
+export function installDevBridge(): boolean {
+  if (!import.meta.env.DEV) return false;
+  if (window.electronAPI) return false;
+
+  const listeners = new Set<() => void>();
+  const trayListeners = new Set<() => void>();
+  const logListeners = new Set<(entry: BridgeLogEntry) => void>();
+
+  const logs: BridgeLogEntry[] = [];
+  let logId = 1;
+
+  const pushLog = (level: BridgeLogEntry["level"], source: BridgeLogEntry["source"], message: string) => {
+    const entry: BridgeLogEntry = { id: logId++, timestamp: Date.now(), level, source, message };
+    logs.push(entry);
+    if (logs.length > 1000) logs.splice(0, logs.length - 1000);
+    logListeners.forEach((cb) => cb(entry));
+  };
+
+  // Mirror the browser console into the in-app log viewer.
+  const patchConsole = (level: BridgeLogEntry["level"]) => {
+    const original = console[level] ?? console.log;
+    console[level] = (...args: unknown[]) => {
+      original.apply(console, args);
+      pushLog(level, "renderer", args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" "));
+    };
+  };
+  (["log", "info", "warn", "error"] as const).forEach((level) =>
+    patchConsole(level === "warn" ? "warn" : level === "error" ? "error" : "info"),
+  );
+
+  window.electronAPI = {
+    listProcesses: async () => SAMPLE_PROCESSES,
+    killProcess: async (pid: number) => {
+      console.info(`[dev-bridge] killProcess(${pid}) ignored in browser preview`);
+      listeners.forEach((cb) => cb());
+      return { success: true };
+    },
+    suspendProcess: async (pid: number) => {
+      console.info(`[dev-bridge] suspendProcess(${pid}) ignored in browser preview`);
+      return { success: true };
+    },
+    resumeProcess: async (pid: number) => {
+      console.info(`[dev-bridge] resumeProcess(${pid}) ignored in browser preview`);
+      return { success: true };
+    },
+    onRefreshProcessList: (callback: () => void) => {
+      listeners.add(callback);
+      return () => {
+        listeners.delete(callback);
+      };
+    },
+    onShowKillByPort: (callback: () => void) => {
+      trayListeners.add(callback);
+      return () => {
+        trayListeners.delete(callback);
+      };
+    },
+    getLogs: async () => [...logs],
+    clearLogs: async () => {
+      logs.length = 0;
+    },
+    getLogFilePath: async () => null,
+    revealLogFile: async () => null,
+    onLog: (callback: (entry: BridgeLogEntry) => void) => {
+      logListeners.add(callback);
+      return () => {
+        logListeners.delete(callback);
+      };
+    },
+    getBridgeLogTarget: async (pid: number): Promise<BridgeLogTarget> => ({
+      pid,
+      name: "node.exe",
+      commandLine: "node next dev (browser preview - no process inspection available)",
+      executablePath: "",
+      workingDir: null,
+      files: [],
+      chain: [],
+    }),
+    readProcessLog: async () => [],
+    watchProcessLog: async () => true,
+    unwatchProcessLog: async () => true,
+    revealProcessLog: async () => true,
+    getProcessIcons: async () => ({ icons: {}, pids: {} }),
+    restartProcess: async () => ({
+      success: false,
+      message: "Restart is not available in browser preview mode.",
+    }),
+    onProcessLogChunk: (callback: (payload: { path: string; lines: string[] }) => void) => {
+      return () => {};
+    },
+  } as unknown as Window["electronAPI"];
+
+  console.info(
+    "%c[dev-bridge] Electron API mocked - browser preview mode",
+    "color:#34d399",
+  );
+  pushLog("info", "system", "Browser preview mode: Electron API mocked (no real process data).");
+  pushLog("info", "renderer", "Renderer ready - logs from the browser console appear here.");
+  return true;
+}
