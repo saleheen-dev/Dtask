@@ -1,5 +1,9 @@
 # Dtask
 
+<p align="center">
+  <img src="resources/icon.png" width="120" alt="Dtask icon" />
+</p>
+
 A modern, open-source cross-platform desktop app built with **Electron v41.3.0** + **React v19.2** + **Vite** that lists all network processes with their ports and lets you kill them with one click.
 
 ![Tech Stack](https://img.shields.io/badge/Electron-41.3.0-9feaf9?style=flat-square)
@@ -57,6 +61,16 @@ npm run dist:win    # Windows NSIS installer
 npm run dist:mac    # macOS DMG
 npm run dist:linux  # Linux AppImage
 ```
+
+### App icons
+
+Icons are generated from the vector source `resources/icon-source.svg`:
+
+```bash
+npm run icons
+```
+
+This regenerates `resources/icon.png`, `resources/icon.ico` and `resources/icons/*.png`.
 
 ### GitHub Release
 

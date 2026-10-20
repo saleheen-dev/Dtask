@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <!-- Tile background -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#16233B"/>
+      <stop offset="0.55" stop-color="#0F172A"/>
+      <stop offset="1" stop-color="#0B1220"/>
+    </linearGradient>
+
+    <!-- Emerald glow -->
+    <radialGradient id="glow" cx="0.26" cy="0.16" r="0.8">
+      <stop offset="0" stop-color="#22C55E" stop-opacity="0.28"/>
+      <stop offset="0.55" stop-color="#22C55E" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#22C55E" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Monogram -->
+    <linearGradient id="mark" gradientUnits="userSpaceOnUse" x1="270" y1="230" x2="770" y2="800">
+      <stop offset="0" stop-color="#6EE7B7"/>
+      <stop offset="0.45" stop-color="#34D399"/>
+      <stop offset="1" stop-color="#16A34A"/>
+    </linearGradient>
+
+    <filter id="markShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="18" result="blur"/>
+      <feOffset in="blur" dx="0" dy="12" result="off"/>
+      <feFlood flood-color="#020617" flood-opacity="0.6" result="col"/>
+      <feComposite in="col" in2="off" operator="in" result="shadow"/>
+      <feMerge>
+        <feMergeNode in="shadow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <clipPath id="tile">
+      <rect x="0" y="0" width="1024" height="1024" rx="232"/>
+    </clipPath>
+  </defs>
+
+  <!-- Tile -->
+  <g clip-path="url(#tile)">
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#bg)"/>
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#glow)"/>
+
+    <!-- Faint connection mesh: the network Dtask manages -->
+    <g stroke="#7DD3FC" stroke-opacity="0.09" stroke-width="5" fill="none" stroke-linecap="round">
+      <path d="M96 848 L232 712"/>
+      <path d="M232 712 L128 620"/>
+      <path d="M892 150 L800 244"/>
+      <path d="M912 852 L802 768"/>
+    </g>
+    <g fill="#7DD3FC" fill-opacity="0.12">
+      <circle cx="96" cy="848" r="12"/>
+      <circle cx="232" cy="712" r="15"/>
+      <circle cx="128" cy="620" r="10"/>
+      <circle cx="892" cy="150" r="12"/>
+      <circle cx="800" cy="244" r="9"/>
+      <circle cx="912" cy="852" r="11"/>
+      <circle cx="802" cy="768" r="9"/>
+    </g>
+  </g>
+
+  <!-- Inner edge -->
+  <rect x="7" y="7" width="1010" height="1010" rx="225" fill="none" stroke="#FFFFFF" stroke-opacity="0.10" stroke-width="13"/>
+
+  <!-- "D" lettermark, optically centred -->
+  <g filter="url(#markShadow)" stroke="url(#mark)" fill="none" stroke-width="132" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M320 280 L320 744"/>
+    <path d="M320 280 H478 A232 232 0 0 1 478 744 H320"/>
+  </g>
+
+  <!-- Live pulse of the monitored network -->
+  <path
+    d="M412 512 L458 512 L478 452 L508 578 L532 512 L640 512"
+    fill="none"
+    stroke="#FB7185"
+    stroke-width="16"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    filter="url(#markShadow)"
+  />
+</svg>
