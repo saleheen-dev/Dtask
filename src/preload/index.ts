@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { ProcessInfo, KillResult } from '../common/types'
+import type { ProcessInfo, KillResult, LogEntry } from '../common/types'
 
 contextBridge.exposeInMainWorld('electronAPI', {
   listProcesses: (): Promise<ProcessInfo[]> => ipcRenderer.invoke('process:list'),
@@ -16,6 +16,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('tray:show-kill-by-port', callback)
     return () => {
       ipcRenderer.removeListener('tray:show-kill-by-port', callback)
+    }
+  },
+  getLogs: (): Promise<LogEntry[]> => ipcRenderer.invoke('logs:get'),
+  clearLogs: (): Promise<void> => ipcRenderer.invoke('logs:clear'),
+  getLogFilePath: (): Promise<string | null> => ipcRenderer.invoke('logs:file-path'),
+  revealLogFile: (): Promise<string | null> => ipcRenderer.invoke('logs:reveal'),
+  onLog: (callback: (entry: LogEntry) => void) => {
+    const handler = (_event: unknown, entry: LogEntry) => callback(entry)
+    ipcRenderer.on('logs:entry', handler)
+    return () => {
+      ipcRenderer.removeListener('logs:entry', handler)
     }
   }
 })

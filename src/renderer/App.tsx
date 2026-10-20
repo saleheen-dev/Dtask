@@ -10,6 +10,7 @@ import {
   Sun,
   Moon,
   Monitor,
+  Terminal,
   Crosshair,
   SearchIcon,
 } from "lucide-react";
@@ -22,6 +23,7 @@ import { ConfirmModal } from "./components/ConfirmModal";
 import { KillByPort } from "./components/KillByPort";
 import { LoadingState } from "./components/LoadingState";
 import { EmptyState } from "./components/EmptyState";
+import { LogsPanel } from "./components/LogsPanel";
 import { ModeToggle } from "./components/mode-toggle";
 import { Button } from "./components/ui/button";
 import { Switch } from "./components/ui/switch";
@@ -105,6 +107,7 @@ export default function App() {
     message: string;
     variant: ToastVariant;
   } | null>(null);
+  const [showLogs, setShowLogs] = useState(false);
 
   const {
     processes,
@@ -154,6 +157,10 @@ export default function App() {
         e.preventDefault();
         searchRef.current?.focus();
         searchRef.current?.select();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "l") {
+        e.preventDefault();
+        setShowLogs((v) => !v);
       }
       if (e.key === "Escape") {
         setSearch("");
@@ -369,6 +376,18 @@ export default function App() {
                 </InputGroupAddon>
               </InputGroup>
 
+              {/* Logs */}
+              <Button
+                variant="outline"
+                size="icon-sm"
+                onClick={() => setShowLogs((v) => !v)}
+                aria-label="Toggle logs"
+                title="Logs (Ctrl+Shift+L)"
+                className={showLogs ? "border-success/50 text-success" : undefined}
+              >
+                <Terminal className="h-4 w-4" />
+              </Button>
+
               {/* Theme toggle */}
               <ModeToggle />
 
@@ -563,6 +582,9 @@ export default function App() {
           />
         )}
 
+        {/* In-app log viewer */}
+        {showLogs && <LogsPanel onClose={() => setShowLogs(false)} />}
+
         {/* Responsive menu (small screens) */}
         <CommandDialog open={showMenu} onOpenChange={setShowMenu}>
           <CommandInput placeholder="Search actions…" />
@@ -645,6 +667,15 @@ export default function App() {
                 Auto-refresh: {autoRefresh ? "On" : "Off"}
               </CommandItem>
             </CommandGroup>
+            <CommandItem
+              onSelect={() => {
+                setShowLogs(true);
+                setShowMenu(false);
+              }}
+            >
+              <Terminal className="h-4 w-4" />
+              Show Logs
+            </CommandItem>
             <CommandGroup heading="Theme">
               <CommandItem
                 onSelect={() => {

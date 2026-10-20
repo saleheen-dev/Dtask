@@ -28,6 +28,7 @@ A modern, open-source cross-platform desktop app built with **Electron v41.3.0**
 - **Window state persistence** — remembers size and position across restarts
 - **Dark-mode-first** — modern UI with shadcn/ui components and Tailwind CSS v4
 - **Light / Dark / System theme** — shadcn dropdown toggle, remembered between launches
+- **In-app log viewer** — `Ctrl+Shift+L` opens a live log panel (main + renderer console), filterable, with the log file on disk
 - **Responsive header** — full toolbar on wide windows, hamburger command menu on narrow
 
 ## Install
@@ -88,6 +89,7 @@ git push origin v0.1.1
 | `Ctrl+S`       | Focus search input               |
 | `Ctrl+K`       | Open Kill by Port dialog         |
 | `Ctrl+R`       | Refresh process list             |
+| `Ctrl+Shift+L` | Toggle the in-app log viewer     |
 | `Escape`       | Clear search / close dialogs     |
 
 ## Platform Support

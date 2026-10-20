@@ -6,13 +6,24 @@ import {
   Menu,
   globalShortcut,
   nativeImage,
+  shell,
 } from "electron";
 import path from "path";
-import { ProcessInfo } from "../common/types";
+import { ProcessInfo, LogLevel } from "../common/types";
 import { listProcesses } from "./services/processDetector";
 import { killProcess } from "./services/processKiller";
 import { suspendProcess, resumeProcess } from "./services/processSuspend";
 import { readWindowState, saveWindowState } from "./services/windowState";
+import {
+  addLog,
+  clearLogs,
+  getLogFilePath,
+  getLogs,
+  installConsoleCapture,
+  onLog,
+} from "./services/logger";
+
+installConsoleCapture();
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -55,6 +66,32 @@ async function createWindow() {
 
   mainWindow.once("ready-to-show", () => {
     mainWindow?.show();
+  });
+
+  // Forward renderer console output into the in-app log viewer.
+  mainWindow.webContents.on("console-message", (details) => {
+    const level: LogLevel =
+      details.level === "error"
+        ? "error"
+        : details.level === "warning"
+          ? "warn"
+          : "info";
+    const where = details.sourceId
+      ? ` (${details.sourceId}:${details.lineNumber})`
+      : "";
+    addLog(level, "renderer", `${details.message}${where}`);
+  });
+
+  mainWindow.webContents.on("render-process-gone", (_event, details) => {
+    addLog("error", "system", `Renderer process gone: ${details.reason}`);
+  });
+
+  mainWindow.webContents.on("preload-error", (_event, preloadPath, error) => {
+    addLog("error", "system", `Preload error in ${preloadPath}: ${error.message}`);
+  });
+
+  mainWindow.webContents.on("did-fail-load", (_event, code, description, url) => {
+    addLog("error", "system", `Failed to load ${url} (${code}: ${description})`);
   });
 
   mainWindow.on("close", (event) => {
@@ -201,4 +238,27 @@ ipcMain.handle("process:suspend", async (_event, pid: number) => {
 
 ipcMain.handle("process:resume", async (_event, pid: number) => {
   return await resumeProcess(pid);
+});
+
+/* ----------------------------- log viewer ----------------------------- */
+
+ipcMain.handle("logs:get", async () => getLogs());
+
+ipcMain.handle("logs:clear", async () => {
+  clearLogs();
+});
+
+ipcMain.handle("logs:file-path", async () => getLogFilePath());
+
+ipcMain.handle("logs:reveal", async () => {
+  const file = getLogFilePath();
+  if (file) shell.showItemInFolder(file);
+  return file;
+});
+
+// Push new log lines to the renderer as they happen.
+onLog((entry) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("logs:entry", entry);
+  }
 });

@@ -15,7 +15,7 @@ declare module "*.svg" {
   export default src
 }
 
-import type { ProcessInfo, KillResult } from '../common/types'
+import type { ProcessInfo, KillResult, LogEntry } from '../common/types'
 
 declare global {
   interface Window {
@@ -26,6 +26,11 @@ declare global {
       resumeProcess: (pid: number) => Promise<KillResult>;
       onRefreshProcessList: (callback: () => void) => () => void;
       onShowKillByPort: (callback: () => void) => () => void;
+      getLogs: () => Promise<LogEntry[]>;
+      clearLogs: () => Promise<void>;
+      getLogFilePath: () => Promise<string | null>;
+      revealLogFile: () => Promise<string | null>;
+      onLog: (callback: (entry: LogEntry) => void) => () => void;
     }
   }
 }
