@@ -1,5 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { ProcessInfo, KillResult, LogEntry, ProcessLogTarget, RestartResult } from '../common/types'
+import type {
+  ProcessInfo,
+  KillResult,
+  LogEntry,
+  ProcessLogTarget,
+  RestartResult,
+  ProcessIconResult,
+} from '../common/types'
 
 contextBridge.exposeInMainWorld('electronAPI', {
   listProcesses: (): Promise<ProcessInfo[]> => ipcRenderer.invoke('process:list'),
@@ -35,6 +42,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
   restartProcess: (pid: number, logFile?: string, workingDir?: string): Promise<RestartResult> => ipcRenderer.invoke('process:restart', pid, logFile, workingDir),
+  getProcessIcons: (pids: number[]): Promise<ProcessIconResult> => ipcRenderer.invoke('process-icons:get', pids),
   onLog: (callback: (entry: LogEntry) => void) => {
     const handler = (_event: unknown, entry: LogEntry) => callback(entry)
     ipcRenderer.on('logs:entry', handler)

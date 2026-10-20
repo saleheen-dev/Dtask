@@ -23,6 +23,13 @@ export interface LogEntry {
   message: string;
 }
 
+export interface ProcessIconResult {
+  /** exePath -> data URL of the extracted icon */
+  icons: Record<string, string>;
+  /** pid -> exePath */
+  pids: Record<number, string>;
+}
+
 export interface ProcessLogFile {
   path: string;
   size: number;

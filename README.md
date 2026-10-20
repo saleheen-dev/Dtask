@@ -13,6 +13,7 @@ A modern, open-source cross-platform desktop app built with **Electron v41.3.0**
 ## Features
 
 - **Process table** — lists all network processes with PID, name, listening port(s), protocol, and optional command-line path
+- **Application icons** — every row shows the real app icon of the running program (extracted from its executable), with an initials fallback
 - **Dashboard layout** — KPI row (processes, listening ports, conflicts, suspended, selected) + live insight column (protocol split, most-port processes, port conflicts, newly appeared processes)
 - **Search** — filter by PID, process name, or port number
 - **Sortable columns** — click any column header (PID, Name, Ports, Protocol) to sort ascending/descending

@@ -15,7 +15,14 @@ declare module "*.svg" {
   export default src
 }
 
-import type { ProcessInfo, KillResult, LogEntry, ProcessLogTarget, RestartResult } from '../common/types'
+import type {
+  ProcessInfo,
+  KillResult,
+  LogEntry,
+  ProcessLogTarget,
+  RestartResult,
+  ProcessIconResult,
+} from '../common/types'
 
 declare global {
   interface Window {
@@ -40,6 +47,7 @@ declare global {
         callback: (payload: { path: string; lines: string[] }) => void,
       ) => () => void;
       restartProcess: (pid: number, logFile?: string, workingDir?: string) => Promise<RestartResult>;
+      getProcessIcons: (pids: number[]) => Promise<ProcessIconResult>;
     }
   }
 }

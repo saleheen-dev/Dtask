@@ -28,6 +28,7 @@ import {
   stopWatching,
   watchLogFile,
 } from "./services/processLogs";
+import { getProcessIcons } from "./services/processIcons";
 import { restartProcess } from "./services/processControl";
 
 installConsoleCapture();
@@ -297,6 +298,10 @@ ipcMain.handle("process:restart", async (_event, pid: number, logFile?: string) 
   const result = await restartProcess(pid, logFile);
   addLog(result.success ? "info" : "error", "main", result.message);
   return result;
+});
+
+ipcMain.handle("process-icons:get", async (_event, pids: number[]) => {
+  return await getProcessIcons(Array.isArray(pids) ? pids : []);
 });
 
 // Push new log lines to the renderer as they happen.

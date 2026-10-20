@@ -80,6 +80,27 @@ const SAMPLE_PROCESSES: ProcessInfo[] = [
   },
 ];
 
+/*
+ * Neutral placeholder tiles for the browser preview. The desktop app extracts
+ * the real icon of each executable at runtime; the mock must not bundle
+ * third-party application artwork.
+ */
+function placeholderIcon(label: string, background: string): string {
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">` +
+    `<rect width="32" height="32" rx="7" fill="${background}"/>` +
+    `<text x="16" y="16.5" fill="#fff" font-family="system-ui, sans-serif" ` +
+    `font-size="13" font-weight="600" text-anchor="middle" ` +
+    `dominant-baseline="central">${label}</text></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+const SAMPLE_ICONS: Record<string, string> = {
+  "chrome.exe": placeholderIcon("C", "#3b5f8a"),
+  "node.exe": placeholderIcon("N", "#3f6b4a"),
+  "Code.exe": placeholderIcon("C", "#4b4b6b"),
+  "explorer.exe": placeholderIcon("E", "#6b5a3f"),
+};
 
 export function installDevBridge(): boolean {
   if (!import.meta.env.DEV) return false;
@@ -163,7 +184,19 @@ export function installDevBridge(): boolean {
     watchProcessLog: async () => true,
     unwatchProcessLog: async () => true,
     revealProcessLog: async () => true,
-    getProcessIcons: async () => ({ icons: {}, pids: {} }),
+    getProcessIcons: async (pids: number[]) => {
+      const icons: Record<string, string> = {};
+      const map: Record<number, string> = {};
+      for (const pid of pids) {
+        const proc = SAMPLE_PROCESSES.find((p) => p.pid === pid);
+        const icon = proc ? SAMPLE_ICONS[proc.name] : undefined;
+        if (!proc || !icon) continue;
+        const key = `mock://${proc.name}`;
+        icons[key] = icon;
+        map[pid] = key;
+      }
+      return { icons, pids: map };
+    },
     restartProcess: async () => ({
       success: false,
       message: "Restart is not available in browser preview mode.",

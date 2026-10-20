@@ -19,6 +19,7 @@ import { Checkbox } from "./ui/checkbox";
 import { DataTable } from "./ui/data-table";
 import { TableRow, TableCell } from "./ui/table";
 import { TableShell } from "./TableShell";
+import type { ProcessIconMap } from "../hooks/useProcessIcons";
 
 interface ProcessTableProps {
   processes: ProcessInfo[];
@@ -26,6 +27,7 @@ interface ProcessTableProps {
   onSuspend: (process: ProcessInfo) => void;
   onResume: (process: ProcessInfo) => void;
   onViewLogs: (process: ProcessInfo) => void;
+  icons: ProcessIconMap;
   selectedPids: Set<number>;
   onToggleSelect: (pid: number) => void;
   onToggleSelectAll: () => void;
@@ -57,6 +59,7 @@ export function ProcessTable({
   onSuspend,
   onResume,
   onViewLogs,
+  icons,
   selectedPids,
   onToggleSelect,
   onToggleSelectAll,
@@ -97,6 +100,7 @@ export function ProcessTable({
         onSuspend,
         onResume,
         onViewLogs,
+        icons,
       }),
     [
       allSelected,
@@ -110,6 +114,7 @@ export function ProcessTable({
       onSuspend,
       onResume,
       onViewLogs,
+      icons,
     ],
   );
 
@@ -287,6 +292,7 @@ export function ProcessTable({
                           proc={proc}
                           conflictingPorts={conflictingPorts}
                           suspendedPids={suspendedPids}
+                          icon={icons.get(proc.pid)}
                           indent
                         />
                       </TableCell>

@@ -24,6 +24,7 @@ import appIcon from "../../resources/icon.png";
 import type { ProcessInfo } from "../common/types";
 import { useProcesses } from "./hooks/useProcesses";
 import { useTheme } from "./hooks/useTheme";
+import { useProcessIcons } from "./hooks/useProcessIcons";
 import { ProcessTable } from "./components/ProcessTable";
 import { ConfirmModal } from "./components/ConfirmModal";
 import { KillByPort } from "./components/KillByPort";
@@ -192,6 +193,10 @@ export default function App() {
   const totalPorts = useMemo(
     () => processes.reduce((sum, p) => sum + p.ports.length, 0),
     [processes],
+  );
+
+  const processIcons = useProcessIcons(
+    useMemo(() => processes.map((p) => p.pid), [processes]),
   );
 
   const conflictingPorts = useMemo(() => {
@@ -593,6 +598,7 @@ export default function App() {
                   ) : (
                     <ProcessTable
                       processes={filtered}
+                      icons={processIcons}
                       onKill={handleKillClick}
                       onViewLogs={setLogProcess}
                       onSuspend={handleSuspend}

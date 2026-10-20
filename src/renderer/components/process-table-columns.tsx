@@ -12,6 +12,7 @@ import {
   processTableColumnClassNames,
 } from "./process-table-cells";
 import { Checkbox } from "./ui/checkbox";
+import type { ProcessIconMap } from "../hooks/useProcessIcons";
 
 export interface ProcessTableColumnOptions {
   allSelected: boolean;
@@ -25,6 +26,7 @@ export interface ProcessTableColumnOptions {
   onSuspend: (process: ProcessInfo) => void;
   onResume: (process: ProcessInfo) => void;
   onViewLogs: (process: ProcessInfo) => void;
+  icons: ProcessIconMap;
 }
 
 export function createProcessTableColumns({
@@ -39,6 +41,7 @@ export function createProcessTableColumns({
   onSuspend,
   onResume,
   onViewLogs,
+  icons,
 }: ProcessTableColumnOptions): ColumnDef<ProcessInfo>[] {
   const columns: ColumnDef<ProcessInfo>[] = [
     {
@@ -74,6 +77,7 @@ export function createProcessTableColumns({
           proc={row.original}
           conflictingPorts={conflictingPorts}
           suspendedPids={suspendedPids}
+          icon={icons.get(row.original.pid)}
         />
       ),
     },

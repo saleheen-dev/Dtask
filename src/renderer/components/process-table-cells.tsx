@@ -25,11 +25,13 @@ export function ProcessNameCell({
   proc,
   conflictingPorts,
   suspendedPids,
+  icon,
   indent = false,
 }: {
   proc: ProcessInfo;
   conflictingPorts: Set<number>;
   suspendedPids: ReadonlySet<number>;
+  icon?: string;
   indent?: boolean;
 }) {
   const conflict = proc.ports.some((p) => conflictingPorts.has(p));
@@ -43,6 +45,21 @@ export function ProcessNameCell({
       )}
       {suspended && (
         <span className="h-1.5 w-1.5 rounded-full bg-suspended" />
+      )}
+      {icon ? (
+        <img
+          src={icon}
+          alt=""
+          aria-hidden="true"
+          className="h-5 w-5 shrink-0 rounded-[5px] object-contain"
+        />
+      ) : (
+        <span
+          aria-hidden="true"
+          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] bg-muted text-[10px] font-semibold uppercase text-muted-foreground"
+        >
+          {(proc.name || "?").trim().charAt(0) || "?"}
+        </span>
       )}
       <span className="max-w-[180px] truncate" title={proc.name}>
         {proc.name}
