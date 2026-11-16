@@ -2,15 +2,16 @@
  * Dev runner: starts the Electron dev server and mirrors all output to
  * `dev.log` (project root) as well as to the console.
  *
- * Why: when an agent starts the dev server in a headless shell, the terminal
- * window never appears on the desktop. This wrapper gives you:
- *   - a log file you can tail (`tail -f dev.log`) or open in VS Code
- *   - a stable place to check for build errors
+ * Why: `npm run dev` is often started from a shell that is not attached to a
+ * visible terminal window, so build errors are easy to miss. The log file gives
+ * you a stable place to check them (`tail -f dev.log` or open it in an editor).
  *
  * Usage:
- *   npm run dev          # electron + vite, logs to dev.log
- *   npm run dev:web      # renderer only -> open http://localhost:5173
- *   npm run dev:visible  # same as dev, but in a visible Windows Terminal
+ *   npm run dev       # electron + vite, logs to dev.log
+ *   npm run dev:web   # renderer only -> open http://localhost:5173
+ *
+ * The raw `electron-vite dev` command is available as `npm run dev:electron`
+ * and can be selected with the DTASK_DEV_SCRIPT environment variable.
  */
 import { spawn } from "node:child_process";
 import fs from "node:fs";
@@ -24,27 +25,38 @@ fs.writeFileSync(LOG_FILE, "");
 
 const logStream = fs.createWriteStream(LOG_FILE, { flags: "a" });
 
-function log(chunk, isError = false) {
+function log(chunk) {
   const text = chunk.toString();
   process.stdout.write(text);
-  if (isError) process.stderr.write("");
   logStream.write(text);
 }
 
 const child = spawn(`npm run ${SCRIPT}`, {
   cwd: ROOT,
   shell: true,
-  stdio: ["ignore", "pipe", "pipe"],
+  stdio: ["inherit", "pipe", "pipe"],
   env: { ...process.env, FORCE_COLOR: "1" },
 });
 
-child.stdout.on("data", (c) => log(c));
-child.stderr.on("data", (c) => log(c));
+child.stdout.on("data", log);
+child.stderr.on("data", log);
+
+function stopChild() {
+  if (!child.pid) return;
+  if (process.platform === "win32") {
+    // `child.kill()` only kills the shell on Windows; take the whole tree down.
+    spawn("taskkill", ["/pid", String(child.pid), "/T", "/F"], {
+      stdio: "ignore",
+    });
+  } else {
+    child.kill("SIGTERM");
+  }
+}
 
 child.on("exit", (code) => {
   logStream.end();
   process.exit(code ?? 0);
 });
 
-process.on("SIGINT", () => child.kill("SIGINT"));
-process.on("SIGTERM", () => child.kill("SIGTERM"));
+process.on("SIGINT", stopChild);
+process.on("SIGTERM", stopChild);

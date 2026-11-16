@@ -34,7 +34,6 @@
     "dev": "node scripts/dev.mjs",
     "dev:electron": "electron-vite dev",
     "dev:web": "electron-vite dev --rendererOnly",
-    "dev:visible": "start \"Dtask Dev Server\" cmd /k npm run dev:electron",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "icons": "node scripts/build-icons.mjs",

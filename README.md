@@ -47,6 +47,21 @@ npm install
 npm run dev
 ```
 
+`npm run dev` runs Electron + Vite and mirrors the output to `dev.log` in the
+project root (git-ignored), which is handy when the dev server is started from a
+shell that is not attached to a visible terminal. The raw command is available
+as `npm run dev:electron`.
+
+For UI work the renderer can also run in a regular browser:
+
+```bash
+npm run dev:web
+```
+
+Open http://localhost:5173. The renderer detects that it is not running inside
+Electron and installs a mock preload API (`src/renderer/lib/dev-bridge.ts`) with
+sample processes, so no real process control happens in this mode.
+
 ## Build
 
 Build the app for packaging:
